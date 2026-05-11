@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Stock Management — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="stock.html">Inventory</a></li>
+      <li><span>Stock Management</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Stock Management</h1>
+        <p class="text-sm text-muted-foreground">Monitoring stok real-time, stok sales, dan ketersediaan</p>
+      </div>
+      <button class="uk-btn uk-btn-secondary uk-btn-sm">
+        <span uk-icon="icon: download; ratio: 0.7"></span> Export
+      </button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Stok Real</div>
+        <div class="erp-stat-value">12,458</div>
+        <div class="text-xs text-muted-foreground">Karton total di gudang</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Stok Sales (Reserved)</div>
+        <div class="erp-stat-value" style="color:#d97706;">2,340</div>
+        <div class="text-xs text-muted-foreground">Direservasi untuk SO aktif</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Stok Tersedia</div>
+        <div class="erp-stat-value text-green-600">10,118</div>
+        <div class="text-xs text-muted-foreground">Siap dijual / dikirim</div>
+      </div>
+    </div>
+
+    <!-- Low Stock Warning -->
+    <div class="erp-alert-danger mb-4">
+      <span uk-icon="icon: warning; ratio: 0.8"></span>
+      <span class="text-sm ml-2"><strong>Stok Rendah!</strong> 2 item di bawah batas minimum: Daging Ayam Utuh (sisa 85 ktn) dan Cumi-cumi (sisa 120 ktn). Segera lakukan pemesanan ulang.</span>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-body py-3">
+        <div class="flex flex-wrap items-end gap-3">
+          <div class="flex-1 min-w-[200px]">
+            <label class="uk-form-label">Cari SKU / Nama</label>
+            <input type="text" class="uk-input" placeholder="Ketik SKU atau nama produk..." id="filter-search" oninput="filterStock()"/>
+          </div>
+          <div style="min-width:180px;">
+            <label class="uk-form-label">Kategori</label>
+            <select class="uk-select" id="filter-category" onchange="filterStock()">
+              <option value="">Semua Kategori</option>
+              <option value="daging">Daging</option>
+              <option value="seafood">Seafood</option>
+              <option value="sayur">Sayur &amp; Frozen</option>
+              <option value="olahan">Olahan</option>
+              <option value="minuman">Minuman</option>
+            </select>
+          </div>
+          <div style="min-width:150px;">
+            <label class="uk-form-label">Status Stok</label>
+            <select class="uk-select" id="filter-status" onchange="filterStock()">
+              <option value="">Semua</option>
+              <option value="aman">Aman</option>
+              <option value="rendah">Rendah</option>
+              <option value="habis">Habis</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Table -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Daftar Stok</h3>
+        <span class="uk-badge uk-badge-primary">10 SKU</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="erp-table-wrap">
+          <table class="uk-table uk-table-divider uk-table-striped uk-table-small erp-table erp-table-compact" id="stock-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Nama Produk</th>
+                <th class="text-right">Stok Real</th>
+                <th class="text-right">Stok Sales</th>
+                <th class="text-right">Tersedia</th>
+                <th class="text-center">Min Stock</th>
+                <th>Status</th>
+                <th class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="stock-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="modal-stock-detail" uk-modal>
+      <div class="uk-modal-dialog uk-modal-container">
+        <div class="uk-modal-header flex items-center justify-between">
+          <h3 class="text-sm font-semibold" id="stock-detail-title">Detail Lot — SKU-001</h3>
+          <button class="uk-modal-close-default" type="button" uk-close></button>
+        </div>
+        <div class="uk-modal-body p-0">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Lot ID</th>
+                <th>Tanggal Masuk</th>
+                <th>Tanggal Expired</th>
+                <th class="text-right">Qty (ktn)</th>
+                <th>Rack</th>
+                <th>FEFO</th>
+              </tr>
+            </thead>
+            <tbody id="stock-detail-tbody"></tbody>
+          </table>
+        </div>
+        <div class="uk-modal-footer">
+          <button class="uk-btn uk-btn-ghost uk-btn-sm uk-modal-close">Tutup</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Stock Management'); renderStock(); });
+
+const stockData = [
+  { sku:'SKU-001', name:'Daging Sapi Frozen 1kg', category:'daging', real:3200, sales:480, min:500, lots:[
+    { lot:'LOT-001', masuk:'02/04/2026', exp:'10/08/2026', qty:1800, rack:'A3-A4', fefo:true },
+    { lot:'LOT-002', masuk:'05/04/2026', exp:'10/09/2026', qty:1400, rack:'F1', fefo:false }
+  ]},
+  { sku:'SKU-002', name:'Ayam Utuh Frozen 1.2kg', category:'daging', real:85, sales:120, min:200, lots:[
+    { lot:'LOT-010', masuk:'01/03/2026', exp:'12/09/2026', qty:85, rack:'B3-B4', fefo:true }
+  ]},
+  { sku:'SKU-003', name:'Udang Vannamei 500g', category:'seafood', real:2800, sales:360, min:400, lots:[
+    { lot:'LOT-020', masuk:'03/04/2026', exp:'08/06/2026', qty:1200, rack:'A2', fefo:true },
+    { lot:'LOT-021', masuk:'06/04/2026', exp:'08/07/2026', qty:1600, rack:'F2-F3', fefo:false }
+  ]},
+  { sku:'SKU-004', name:'Sayur Campur Frozen 1kg', category:'sayur', real:1440, sales:180, min:300, lots:[
+    { lot:'LOT-030', masuk:'28/03/2026', exp:'05/05/2026', qty:1440, rack:'D3-D4', fefo:true }
+  ]},
+  { sku:'SKU-005', name:'Ikan Salmon Fillet 400g', category:'seafood', real:1800, sales:240, min:300, lots:[
+    { lot:'LOT-040', masuk:'01/04/2026', exp:'09/06/2026', qty:600, rack:'C3', fefo:true },
+    { lot:'LOT-041', masuk:'04/04/2026', exp:'09/07/2026', qty:1200, rack:'C4', fefo:false }
+  ]},
+  { sku:'SKU-006', name:'Kentang Frozen Fries 1kg', category:'sayur', real:2400, sales:300, min:400, lots:[
+    { lot:'LOT-050', masuk:'02/04/2026', exp:'11/08/2026', qty:480, rack:'E2', fefo:true },
+    { lot:'LOT-051', masuk:'05/04/2026', exp:'11/09/2026', qty:960, rack:'E3', fefo:false },
+    { lot:'LOT-052', masuk:'08/04/2026', exp:'11/10/2026', qty:960, rack:'E4', fefo:false }
+  ]},
+  { sku:'SKU-007', name:'Nugget Ayam 500g', category:'olahan', real:120, sales:40, min:150, lots:[
+    { lot:'LOT-060', masuk:'20/03/2026', exp:'06/04/2026', qty:40, rack:'B1-B2', fefo:true },
+    { lot:'LOT-061', masuk:'25/03/2026', exp:'06/05/2026', qty:40, rack:'B2', fefo:false },
+    { lot:'LOT-062', masuk:'01/04/2026', exp:'06/06/2026', qty:40, rack:'G4', fefo:false }
+  ]},
+  { sku:'SKU-008', name:'Cumi-cumi Utuh 800g', category:'seafood', real:120, sales:80, min:200, lots:[
+    { lot:'LOT-070', masuk:'30/03/2026', exp:'01/07/2026', qty:120, rack:'F3', fefo:true }
+  ]},
+  { sku:'SKU-009', name:'Susu UHT 1L', category:'minuman', real:850, sales:100, min:200, lots:[
+    { lot:'LOT-080', masuk:'01/04/2026', exp:'01/10/2026', qty:500, rack:'E1', fefo:true },
+    { lot:'LOT-081', masuk:'05/04/2026', exp:'05/10/2026', qty:350, rack:'A1', fefo:false }
+  ]},
+  { sku:'SKU-010', name:'Sosis Sapi Premium 500g', category:'olahan', real:2643, sales:440, min:300, lots:[
+    { lot:'LOT-090', masuk:'02/04/2026', exp:'02/09/2026', qty:1400, rack:'C1-C2', fefo:true },
+    { lot:'LOT-091', masuk:'06/04/2026', exp:'06/09/2026', qty:1243, rack:'D1-D2', fefo:false }
+  ]}
+];
+
+function renderStock(filter) {
+  const tbody = document.getElementById('stock-tbody');
+  const search = (document.getElementById('filter-search')?.value || '').toLowerCase();
+  const cat = document.getElementById('filter-category')?.value || '';
+  const stat = document.getElementById('filter-status')?.value || '';
+
+  let html = '';
+  stockData.forEach((item, i) => {
+    const tersedia = item.real - item.sales;
+    const pct = Math.round((tersedia / item.real) * 100);
+
+    // Filter
+    if (search && !item.sku.toLowerCase().includes(search) && !item.name.toLowerCase().includes(search)) return;
+    if (cat && item.category !== cat) return;
+    let itemStatus = tersedia <= 0 ? 'habis' : (tersedia < item.min ? 'rendah' : 'aman');
+    if (stat && itemStatus !== stat) return;
+
+    let statusBadge = '';
+    if (itemStatus === 'habis') {
+      statusBadge = '<span class="uk-badge uk-badge-destructive">Habis</span>';
+    } else if (itemStatus === 'rendah') {
+      statusBadge = '<span class="erp-alert-danger text-xs" style="padding:.125rem .375rem;">⚠ Rendah</span>';
+    } else {
+      statusBadge = '<span class="uk-badge">Aman</span>';
+    }
+
+    html += '<tr data-idx="' + i + '">';
+    html += '<td data-label="SKU" class="font-mono text-xs font-semibold">' + item.sku + '</td>';
+    html += '<td data-label="Nama Produk">' + item.name + '</td>';
+    html += '<td data-label="Stok Real" class="text-right font-semibold">' + item.real.toLocaleString('id-ID') + '</td>';
+    html += '<td data-label="Stok Sales" class="text-right" style="color:#d97706;">' + item.sales.toLocaleString('id-ID') + '</td>';
+    html += '<td data-label="Tersedia" class="text-right font-semibold">' + tersedia.toLocaleString('id-ID') + '</td>';
+    html += '<td data-label="Min Stock" class="text-center text-xs text-muted-foreground">' + item.min.toLocaleString('id-ID') + '</td>';
+    html += '<td data-label="Status">' + statusBadge + '</td>';
+    html += '<td data-label="Aksi" class="text-center"><button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showDetail(' + i + ')">Detail Lot</button></td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html || '<tr><td data-label="Kosong" colspan="8" class="text-center text-muted-foreground py-4">Tidak ada data stok ditemukan.</td></tr>';
+}
+
+function filterStock() { renderStock(); }
+
+function showDetail(idx) {
+  const item = stockData[idx];
+  document.getElementById('stock-detail-title').textContent = 'Detail Lot — ' + item.sku + ' ' + item.name;
+  const tbody = document.getElementById('stock-detail-tbody');
+  let html = '';
+  item.lots.forEach(lot => {
+    html += '<tr>';
+    html += '<td data-label="Lot" class="font-mono text-xs font-semibold">' + lot.lot + '</td>';
+    html += '<td data-label="Tanggal Masuk" class="text-xs">' + lot.masuk + '</td>';
+    html += '<td data-label="Exp Date" class="text-xs">' + lot.exp + '</td>';
+    html += '<td data-label="Qty" class="text-right font-semibold">' + lot.qty.toLocaleString('id-ID') + '</td>';
+    html += '<td data-label="Rak" class="text-xs">' + lot.rack + '</td>';
+    html += '<td data-label="FEFO">' + (lot.fefo ? '<span class="uk-badge" style="background:#d1fae5;color:#065f46;font-size:.625rem;">FEFO First</span>' : '') + '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+  UIkit.modal('#modal-stock-detail').show();
+}
+</script>
+</body>
+</html>
