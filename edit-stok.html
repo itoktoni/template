@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Edit Stok & Berita Acara — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+
+  <div id="erp-sidebar-slot"></div>
+  <div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+  <div id="erp-topbar-slot"></div>
+
+  <main class="erp-main">
+    <div class="pb-4">
+
+      <!-- Breadcrumb -->
+      <ul class="uk-breadcrumb text-xs mb-3">
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="opname.html">Opname Stok</a></li>
+        <li><span>Edit Stok</span></li>
+      </ul>
+
+      <!-- Page Header -->
+      <div class="erp-page-header">
+        <h1>Edit Stok & Berita Acara</h1>
+        <div class="flex gap-2">
+          <button class="uk-btn uk-btn-secondary uk-btn-sm" onclick="showHistory()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Riwayat
+          </button>
+        </div>
+      </div>
+
+      <!-- Warning Banner -->
+      <div class="erp-alert-warning mb-3" style="display:flex;align-items:center;gap:.5rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="text-xs">Edit Stok memerlukan Berita Acara sebagai justifikasi. Semua perubahan akan tercatat untuk audit.</span>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Left: Edit Stok Form -->
+        <div>
+          <div class="uk-card">
+            <div class="uk-card-header" style="padding:.625rem .75rem;">
+              <span class="text-sm font-semibold">Form Edit Stok</span>
+            </div>
+            <div class="uk-card-body">
+              <div class="erp-form-grid" style="grid-template-columns:1fr;">
+                <!-- SKU Selection -->
+                <div class="uk-form-stacked">
+                  <label class="uk-form-label">SKU / Barcode</label>
+                  <div class="flex gap-2">
+                    <select class="uk-select" id="editSku" onchange="loadCurrentStock()" style="flex:1;">
+                      <option value="">Pilih SKU atau scan barcode...</option>
+                      <option value="DS-001">DS-001 — Daging Sapi Premium 1kg</option>
+                      <option value="DA-002">DA-002 — Daging Ayam Utuh 2kg</option>
+                      <option value="KT-003">KT-003 — Kentang Frozen 10kg</option>
+                      <option value="CU-004">CU-004 — Cumi Frozen 500g</option>
+                      <option value="SU-005">SU-005 — Susu UHT 1L</option>
+                      <option value="BCS-006">BCS-006 — Beef Chuck Steak 1kg</option>
+                    </select>
+                    <button class="uk-btn uk-btn-secondary uk-btn-icon" title="Scan">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Current Stock Display -->
+                <div id="currentStockDisplay" style="display:none;">
+                  <div class="erp-alert-inline" style="background:var(--muted);border:1px solid var(--border);">
+                    <span class="text-xs font-semibold">Stok Saat Ini:</span>
+                    <span id="currentQty" class="text-sm font-bold" style="color:var(--primary);">—</span>
+                    <span id="currentDetail" class="text-xs" style="color:var(--muted-foreground);"></span>
+                  </div>
+                </div>
+
+                <!-- New Quantity -->
+                <div class="uk-form-stacked">
+                  <label class="uk-form-label">Jumlah Baru</label>
+                  <input type="number" class="uk-input" id="newQty" placeholder="Masukkan jumlah baru..." min="0">
+                </div>
+
+                <!-- Selisih Preview -->
+                <div id="selisihPreview" style="display:none;">
+                  <div class="erp-alert-inline" id="selisihBox">
+                    <span class="text-xs font-semibold">Selisih:</span>
+                    <span id="selisihValue" class="text-sm font-bold"></span>
+                    <span id="selisihNote" class="text-xs"></span>
+                  </div>
+                </div>
+
+                <!-- Alasan Penyesuaian -->
+                <div class="uk-form-stacked">
+                  <label class="uk-form-label uk-form-label-required">Alasan Penyesuaian</label>
+                  <select class="uk-select" id="alasan">
+                    <option value="">Pilih alasan...</option>
+                    <option value="selisih_opname">Selisih Opname</option>
+                    <option value="kerusakan">Kerusakan Produk</option>
+                    <option value="kesalahan_input">Kesalahan Input</option>
+                    <option value="kehilangan">Kehilangan</option>
+                    <option value="penyusutan">Penyusutan Alami</option>
+                    <option value="lainnya">Lainnya</option>
+                  </select>
+                </div>
+
+                <!-- Referensi Opname -->
+                <div class="uk-form-stacked" id="refOpnameGroup">
+                  <label class="uk-form-label">Referensi Sesi Opname</label>
+                  <select class="uk-select" id="refOpname">
+                    <option value="">Tidak ada referensi opname</option>
+                    <option value="OPN-2026-0089">OPN-2026-0089 — Opname Harian (10 Mei 2026)</option>
+                    <option value="OPN-2026-0088">OPN-2026-0088 — Opname Harian (09 Mei 2026)</option>
+                    <option value="OPN-2026-0085">OPN-2026-0085 — Opname Sebagian (07 Mei 2026)</option>
+                  </select>
+                </div>
+
+                <!-- Deskripsi Detail -->
+                <div class="uk-form-stacked">
+                  <label class="uk-form-label uk-form-label-required">Deskripsi Detail</label>
+                  <textarea class="uk-textarea" id="deskripsi" rows="3" placeholder="Jelaskan detail penyesuaian stok..."></textarea>
+                </div>
+
+                <!-- Lampiran Dokumen (for Kehilangan/Lainnya) -->
+                <div class="uk-form-stacked" id="lampiranGroup" style="display:none;">
+                  <label class="uk-form-label uk-form-label-required">Lampiran Dokumen Pendukung</label>
+                  <div class="uk-placeholder" style="text-align:center;padding:1rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto .25rem;display:block;opacity:.5;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span class="text-xs" style="color:var(--muted-foreground);">Upload dokumen pendukung atau catatan investigasi</span>
+                    <input type="file" class="uk-input" style="margin-top:.5rem;font-size:.75rem;">
+                  </div>
+                </div>
+
+                <!-- Supervisor Confirmation -->
+                <div class="uk-form-stacked">
+                  <label class="uk-form-label">Supervisor</label>
+                  <div class="erp-alert-inline" style="background:var(--muted);border:1px solid var(--border);">
+                    <div class="uk-avatar" style="width:1.5rem;height:1.5rem;font-size:.5rem;background:var(--primary);color:var(--primary-foreground);">AD</div>
+                    <span class="text-xs font-semibold">Admin — Supervisor</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Preview & Berita Acara -->
+        <div>
+          <!-- Preview Perbandingan -->
+          <div class="uk-card mb-3">
+            <div class="uk-card-header" style="padding:.625rem .75rem;">
+              <span class="text-sm font-semibold">Preview Perubahan</span>
+            </div>
+            <div class="uk-card-body">
+              <div id="previewEmpty" class="text-center py-4" style="color:var(--muted-foreground);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto .5rem;display:block;opacity:.3;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="text-xs">Pilih SKU dan masukkan jumlah baru untuk melihat preview</span>
+              </div>
+              <div id="previewContent" style="display:none;">
+                <table class="uk-table uk-table-divider uk-table-compact erp-table-compact" style="margin:0;">
+                  <thead>
+                    <tr>
+                      <th class="text-xs">Metrik</th>
+                      <th class="text-xs">Sebelum</th>
+                      <th class="text-xs">Sesudah</th>
+                      <th class="text-xs">Selisih</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td data-label="Metrik">Stok Real</td><td data-label="Sebelum">—</td><td data-label="Sesudah">—</td><td data-label="Selisih">—</td></tr>
+                    <tr><td data-label="Metrik">Stok Sales</td><td data-label="Sebelum">420</td><td data-label="Sesudah">420</td><td data-label="Selisih">0</td></tr>
+                    <tr><td data-label="Metrik">Stok Tersedia</td><td data-label="Sebelum">—</td><td data-label="Sesudah">—</td><td data-label="Selisih">—</td></tr>
+                  </tbody>
+                </table>
+
+                <!-- Negative Stock Warning -->
+                <div id="negativeStockWarning" style="display:none;margin-top:.5rem;">
+                  <div class="erp-alert-danger" style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--radius);font-size:.8125rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <span class="text-xs font-semibold">PERINGATAN KRITIS: Penyesuaian ini akan membuat Stok Tersedia bernilai negatif!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Berita Acara Preview -->
+          <div class="uk-card mb-3">
+            <div class="uk-card-header" style="padding:.625rem .75rem;">
+              <span class="text-sm font-semibold">Berita Acara</span>
+            </div>
+            <div class="uk-card-body">
+              <div class="p-3 rounded" style="background:var(--muted);font-size:.75rem;">
+                <div class="font-bold text-center mb-2" style="font-size:.8125rem;">BERITA ACARA<br>PENYESUAIAN STOK</div>
+                <table class="erp-no-stack" style="width:100%;font-size:.75rem;">
+                  <tr><td style="padding:2px 0;width:40%;color:var(--muted-foreground);">Nomor Dokumen</td><td style="padding:2px 0;font-weight:600;">BA-2026-0047</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Tanggal</td><td style="padding:2px 0;font-weight:600;">10 Mei 2026</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">SKU</td><td style="padding:2px 0;font-weight:600;" id="baSku">—</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Alasan</td><td style="padding:2px 0;font-weight:600;" id="baAlasan">—</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Jumlah Sebelum</td><td style="padding:2px 0;font-weight:600;" id="baSebelum">—</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Jumlah Sesudah</td><td style="padding:2px 0;font-weight:600;" id="baSesudah">—</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Selisih</td><td style="padding:2px 0;font-weight:600;" id="baSelisih">—</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Referensi Opname</td><td style="padding:2px 0;font-weight:600;" id="baRef">—</td></tr>
+                  <tr><td style="padding:2px 0;color:var(--muted-foreground);">Supervisor</td><td style="padding:2px 0;font-weight:600;">Admin (AD)</td></tr>
+                </table>
+              </div>
+
+              <div class="flex gap-2 mt-3">
+                <button class="uk-btn uk-btn-primary" onclick="confirmEdit()" style="flex:1;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Konfirmasi Edit Stok
+                </button>
+                <button class="uk-btn uk-btn-ghost" onclick="resetForm()">Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-3 gap-2">
+            <div class="uk-card p-2 text-center">
+              <div class="text-lg font-bold" style="color:var(--primary);">47</div>
+              <div class="text-xs" style="color:var(--muted-foreground);">Edit Stok Bulan Ini</div>
+            </div>
+            <div class="uk-card p-2 text-center">
+              <div class="text-lg font-bold" style="color:#16a34a;">12</div>
+              <div class="text-xs" style="color:var(--muted-foreground);">Selisih Opname</div>
+            </div>
+            <div class="uk-card p-2 text-center">
+              <div class="text-lg font-bold" style="color:#dc2626;">3</div>
+              <div class="text-xs" style="color:var(--muted-foreground);">Kehilangan</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Section (hidden by default) -->
+      <div id="historySection" style="display:none;margin-top:1rem;">
+        <div class="uk-card">
+          <div class="uk-card-header" style="padding:.625rem .75rem;">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold">Riwayat Edit Stok</span>
+              <button class="uk-btn uk-btn-ghost uk-btn-xs" onclick="document.getElementById('historySection').style.display='none'">Tutup</button>
+            </div>
+          </div>
+          <div class="uk-card-body" style="padding:0;">
+            <div class="erp-table-wrap">
+              <table class="uk-table uk-table-divider uk-table-compact erp-table erp-table-compact" style="margin:0;">
+                <thead>
+                  <tr>
+                    <th>No. BA</th>
+                    <th>Tanggal</th>
+                    <th>SKU</th>
+                    <th>Sebelum</th>
+                    <th>Sesudah</th>
+                    <th>Selisih</th>
+                    <th>Alasan</th>
+                    <th>Supervisor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td data-label="Metrik">BA-2026-0046</td><td data-label="Sebelum">09 Mei 2026</td><td data-label="Sesudah">CU-004 Cumi Frozen</td><td data-label="Selisih">840</td><td data-label="No. BA">838</td><td data-label="Tanggal">-2</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#fef3c7;color:#92400e;">Selisih Opname</span></td><td data-label="Sebelum">Supervisor A</td></tr>
+                  <tr><td data-label="Metrik">BA-2026-0045</td><td data-label="Sebelum">08 Mei 2026</td><td data-label="Sesudah">DS-001 Daging Sapi</td><td data-label="Selisih">1,200</td><td data-label="No. BA">1,205</td><td data-label="Tanggal">+5</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#e0e7ff;color:#3730a3;">Kesalahan Input</span></td><td data-label="Sebelum">Supervisor B</td></tr>
+                  <tr><td data-label="Metrik">BA-2026-0044</td><td data-label="Sebelum">07 Mei 2026</td><td data-label="Sesudah">DA-002 Daging Ayam</td><td data-label="Selisih">2,100</td><td data-label="No. BA">2,095</td><td data-label="Tanggal">-5</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#fee2e2;color:#991b1b;">Kehilangan</span></td><td data-label="Sebelum">Supervisor A</td></tr>
+                  <tr><td data-label="Metrik">BA-2026-0043</td><td data-label="Sebelum">06 Mei 2026</td><td data-label="Sesudah">KT-003 Kentang</td><td data-label="Selisih">3,500</td><td data-label="No. BA">3,498</td><td data-label="Tanggal">-2</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#fef3c7;color:#92400e;">Penyusutan Alami</span></td><td data-label="Sebelum">Supervisor A</td></tr>
+                  <tr><td data-label="Metrik">BA-2026-0042</td><td data-label="Sebelum">05 Mei 2026</td><td data-label="Sesudah">SU-005 Susu UHT</td><td data-label="Selisih">1,800</td><td data-label="No. BA">1,796</td><td data-label="Tanggal">-4</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#fee2e2;color:#991b1b;">Kerusakan Produk</span></td><td data-label="Sebelum">Supervisor B</td></tr>
+                  <tr><td data-label="Metrik">BA-2026-0041</td><td data-label="Sebelum">04 Mei 2026</td><td data-label="Sesudah">BCS-006 Beef Chuck</td><td data-label="Selisih">560</td><td data-label="No. BA">558</td><td data-label="Tanggal">-2</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#fef3c7;color:#92400e;">Selisih Opname</span></td><td data-label="Sebelum">Supervisor A</td></tr>
+                  <tr><td data-label="Metrik">BA-2026-0040</td><td data-label="Sebelum">03 Mei 2026</td><td data-label="Sesudah">DS-001 Daging Sapi</td><td data-label="Selisih">1,195</td><td data-label="No. BA">1,200</td><td data-label="Tanggal">+5</td><td data-label="SKU"><span class="uk-badge" style="font-size:.55rem;background:#e0e7ff;color:#3730a3;">Lainnya</span></td><td data-label="Sebelum">Supervisor A</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js" ></script>
+  <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+  <script src="assets/erp.js"></script>
+  <script src="assets/layout.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initERPlayout('Edit Stok & Berita Acara');
+    });
+
+    // Stock data
+    const stockData = {
+      'DS-001': { name: 'Daging Sapi Premium 1kg', real: 1200, sales: 420 },
+      'DA-002': { name: 'Daging Ayam Utuh 2kg', real: 2095, sales: 310 },
+      'KT-003': { name: 'Kentang Frozen 10kg', real: 3498, sales: 560 },
+      'CU-004': { name: 'Cumi Frozen 500g', real: 838, sales: 180 },
+      'SU-005': { name: 'Susu UHT 1L', real: 1796, sales: 245 },
+      'BCS-006': { name: 'Beef Chuck Steak 1kg', real: 558, sales: 120 }
+    };
+
+    const alasanMap = {
+      'selisih_opname': 'Selisih Opname',
+      'kerusakan': 'Kerusakan Produk',
+      'kesalahan_input': 'Kesalahan Input',
+      'kehilangan': 'Kehilangan',
+      'penyusutan': 'Penyusutan Alami',
+      'lainnya': 'Lainnya'
+    };
+
+    function loadCurrentStock() {
+      const sku = document.getElementById('editSku').value;
+      const display = document.getElementById('currentStockDisplay');
+      const previewEmpty = document.getElementById('previewEmpty');
+      const previewContent = document.getElementById('previewContent');
+
+      if (sku && stockData[sku]) {
+        const d = stockData[sku];
+        document.getElementById('currentQty').textContent = d.real.toLocaleString();
+        document.getElementById('currentDetail').textContent = `(${d.name} · Sales: ${d.sales})`;
+        display.style.display = 'block';
+        previewEmpty.style.display = 'none';
+        previewContent.style.display = 'block';
+        updatePreview();
+      } else {
+        display.style.display = 'none';
+        previewEmpty.style.display = 'block';
+        previewContent.style.display = 'none';
+      }
+    }
+
+    function updatePreview() {
+      const sku = document.getElementById('editSku').value;
+      const newQty = parseInt(document.getElementById('newQty').value) || 0;
+      const alasan = document.getElementById('alasan').value;
+
+      if (!sku || !stockData[sku]) return;
+
+      const d = stockData[sku];
+      const diff = newQty - d.real;
+      const tersediaBefore = d.real - d.sales;
+      const tersediaAfter = newQty - d.sales;
+
+      document.getElementById('prevRealBefore').textContent = d.real.toLocaleString();
+      document.getElementById('prevRealAfter').textContent = newQty.toLocaleString();
+      document.getElementById('prevRealDiff').textContent = (diff >= 0 ? '+' : '') + diff.toLocaleString();
+      document.getElementById('prevRealDiff').style.color = diff >= 0 ? '#16a34a' : '#dc2626';
+
+      document.getElementById('prevTersediaBefore').textContent = tersediaBefore.toLocaleString();
+      document.getElementById('prevTersediaAfter').textContent = tersediaAfter.toLocaleString();
+      document.getElementById('prevTersediaDiff').textContent = (diff >= 0 ? '+' : '') + diff.toLocaleString();
+      document.getElementById('prevTersediaDiff').style.color = diff >= 0 ? '#16a34a' : '#dc2626';
+
+      // Negative stock warning
+      const negWarn = document.getElementById('negativeStockWarning');
+      negWarn.style.display = tersediaAfter < 0 ? 'block' : 'none';
+
+      // Update Berita Acara
+      document.getElementById('baSku').textContent = `${sku} — ${d.name}`;
+      document.getElementById('baAlasan').textContent = alasanMap[alasan] || '—';
+      document.getElementById('baSebelum').textContent = d.real.toLocaleString();
+      document.getElementById('baSesudah').textContent = newQty.toLocaleString();
+      document.getElementById('baSelisih').textContent = (diff >= 0 ? '+' : '') + diff.toLocaleString();
+      document.getElementById('baRef').textContent = document.getElementById('refOpname').value || '—';
+
+      // Selisih preview
+      const selisihBox = document.getElementById('selisihPreview');
+      const selisihVal = document.getElementById('selisihValue');
+      const selisihNote = document.getElementById('selisihNote');
+      selisihBox.style.display = 'block';
+      selisihVal.textContent = (diff >= 0 ? '+' : '') + diff.toLocaleString();
+      selisihVal.style.color = diff >= 0 ? '#16a34a' : '#dc2626';
+      selisihNote.textContent = diff >= 0 ? 'penambahan' : 'pengurangan';
+
+      if (diff >= 0) {
+        document.getElementById('selisihBox').className = 'erp-alert-inline erp-alert-success';
+      } else {
+        document.getElementById('selisihBox').className = 'erp-alert-inline erp-alert-danger';
+      }
+    }
+
+    // Show/hide lampiran for Kehilangan/Lainnya
+    document.getElementById('alasan').addEventListener('change', function() {
+      const lampiran = document.getElementById('lampiranGroup');
+      lampiran.style.display = (this.value === 'kehilangan' || this.value === 'lainnya') ? 'block' : 'none';
+    });
+
+    document.getElementById('newQty').addEventListener('input', updatePreview);
+    document.getElementById('refOpname').addEventListener('change', updatePreview);
+
+    function confirmEdit() {
+      const sku = document.getElementById('editSku').value;
+      const newQty = document.getElementById('newQty').value;
+      const alasan = document.getElementById('alasan').value;
+      const deskripsi = document.getElementById('deskripsi').value;
+
+      if (!sku) { alert('Pilih SKU terlebih dahulu!'); return; }
+      if (!newQty) { alert('Masukkan jumlah baru!'); return; }
+      if (!alasan) { alert('Pilih alasan penyesuaian!'); return; }
+      if (!deskripsi) { alert('Isi deskripsi detail penyesuaian!'); return; }
+
+      if (stockData[sku] && (parseInt(newQty) - stockData[sku].real) < 0 && (stockData[sku].real - stockData[sku].sales - (parseInt(newQty) - stockData[sku].real)) < 0) {
+        if (!confirm('PERINGATAN: Edit Stok ini akan membuat Stok Tersedia negatif. Yakin ingin melanjutkan?')) return;
+      }
+
+      alert('Edit Stok berhasil dikonfirmasi!\nBerita Acara BA-2026-0047 telah disimpan.');
+      resetForm();
+    }
+
+    function resetForm() {
+      document.getElementById('editSku').value = '';
+      document.getElementById('newQty').value = '';
+      document.getElementById('alasan').value = '';
+      document.getElementById('refOpname').value = '';
+      document.getElementById('deskripsi').value = '';
+      document.getElementById('currentStockDisplay').style.display = 'none';
+      document.getElementById('previewEmpty').style.display = 'block';
+      document.getElementById('previewContent').style.display = 'none';
+      document.getElementById('selisihPreview').style.display = 'none';
+      document.getElementById('lampiranGroup').style.display = 'none';
+    }
+
+    function showHistory() {
+      const section = document.getElementById('historySection');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
