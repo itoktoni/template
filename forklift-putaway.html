@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://rsms.me/"/>
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
   <link rel="stylesheet" href="assets/erp.css"/>
   <script>document.documentElement.classList.remove('dark');</script>
@@ -61,7 +62,32 @@
 
       <!-- Active Task Card (col-span-2) -->
       <div class="lg:col-span-2">
-        <div class="uk-card uk-card-default border-2 border-blue-400">
+        
+        <!-- Quick Filter Controls -->
+        <div class="uk-card uk-card-default mb-4">
+          <div class="uk-card-body py-3">
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="erp-checkbox-group" id="erp-filter-status">
+                <label class="erp-checkbox-item">
+                  <input type="checkbox" value="all" checked> Semua
+                </label>
+                <label class="erp-checkbox-item">
+                  <input type="checkbox" value="active" checked> Aktif
+                </label>
+                <label class="erp-checkbox-item">
+                  <input type="checkbox" value="pending"> Pending
+                </label>
+              </div>
+              <label class="erp-toggle">
+                <input type="checkbox" id="toggle-filter" checked/>
+                <span class="erp-toggle-track"><span class="erp-toggle-thumb"></span></span>
+                Filter Aktif
+              </label>
+            </div>
+          </div>
+        </div>
+
+<div class="uk-card uk-card-default border-2 border-blue-400">
           <div class="uk-card-header bg-blue-50">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -200,7 +226,7 @@
       <div class="uk-card-header flex items-center justify-between">
         <h3 class="uk-card-title text-sm font-semibold">Antrian Task Putaway</h3>
         <div class="flex gap-2 items-center">
-          <select class="uk-select uk-form-small" style="width:140px;">
+          <select id="ts-01" class="uk-select uk-form-small" style="width:140px;">
             <option value="all">Semua Status</option>
             <option value="pending">Antrian</option>
             <option value="active">Aktif</option>
@@ -315,11 +341,15 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
 <script src="assets/erp.js"></script>
 <script src="assets/layout.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => { initERPlayout('Forklift Task — Putaway'); });
+  
+  initAllTomSelect(['#ts-01']);
+  
 
 function confirmPutaway() {
   const input = document.getElementById('confirm-scan-input').value.trim();
@@ -355,7 +385,9 @@ function assignAlt(rack, level) {
 }
 
 function scrollToActive() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' 
+  initCheckboxGroup('#erp-filter-status');
+});
 }
 
 // Show rack conflict alert on page load for demo
