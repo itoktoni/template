@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sales Order — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="sales-order.html">Outbound</a></li>
+      <li><span>Sales Order</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Sales Order</h1>
+        <p class="text-sm text-muted-foreground">Pembuatan dan pengelolaan Sales Order dengan reservasi stok</p>
+      </div>
+      <button class="uk-btn uk-btn-primary uk-btn-sm" onclick="document.getElementById('create-so-section').scrollIntoView({behavior:'smooth'});">
+        <span uk-icon="icon: plus; ratio: 0.7"></span> Buat SO Baru
+      </button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Total SO Aktif</div>
+        <div class="erp-stat-value">8</div>
+        <div class="text-xs text-muted-foreground">Draft + Terkonfirmasi</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Total Reservasi</div>
+        <div class="erp-stat-value" style="color:#d97706;">2,340</div>
+        <div class="text-xs text-muted-foreground">Karton ter-reservasi</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Dibatalkan</div>
+        <div class="erp-stat-value text-muted-foreground">2</div>
+        <div class="text-xs text-muted-foreground">30 hari terakhir</div>
+      </div>
+    </div>
+
+    <!-- Create SO Form -->
+    <div class="uk-card uk-card-default mb-4" id="create-so-section">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Buat Sales Order Baru</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid">
+          <div>
+            <label class="uk-form-label">Nama Customer</label>
+            <select class="uk-select" id="so-customer">
+              <option value="">— Pilih Customer —</option>
+              <option value="CUST-001">PT. Segar Frozen Mart</option>
+              <option value="CUST-002">CV. Berkah Sayur Abadi</option>
+              <option value="CUST-003">PT. Fresh Market Indonesia</option>
+              <option value="CUST-004">Toko Berkah Daging</option>
+              <option value="CUST-005">PT. Grosir Frozen Food</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">SKU / Produk</label>
+            <select class="uk-select" id="so-sku" onchange="updateStokTersedia()">
+              <option value="">— Pilih SKU —</option>
+              <option value="SKU-001" data-tersedia="2720">SKU-001 — Daging Sapi Frozen 1kg</option>
+              <option value="SKU-002" data-tersedia="-35">SKU-002 — Ayam Utuh Frozen 1.2kg</option>
+              <option value="SKU-003" data-tersedia="2440">SKU-003 — Udang Vannamei 500g</option>
+              <option value="SKU-004" data-tersedia="1260">SKU-004 — Sayur Campur Frozen 1kg</option>
+              <option value="SKU-005" data-tersedia="1560">SKU-005 — Ikan Salmon Fillet 400g</option>
+              <option value="SKU-006" data-tersedia="2100">SKU-006 — Kentang Frozen Fries 1kg</option>
+              <option value="SKU-007" data-tersedia="80">SKU-007 — Nugget Ayam 500g</option>
+              <option value="SKU-008" data-tersedia="40">SKU-008 — Cumi-cumi Utuh 800g</option>
+              <option value="SKU-009" data-tersedia="750">SKU-009 — Susu UHT 1L</option>
+              <option value="SKU-010" data-tersedia="2203">SKU-010 — Sosis Sapi Premium 500g</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Quantity</label>
+            <input type="number" class="uk-input" placeholder="0" id="so-qty" min="1" oninput="updateStokTersedia()"/>
+          </div>
+          <div>
+            <label class="uk-form-label">Satuan</label>
+            <select class="uk-select" id="so-unit">
+              <option value="Karton">Karton</option>
+              <option value="Bungkus">Bungkus</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Stok Tersedia Display -->
+        <div class="mt-3 p-3 rounded-lg" style="background:var(--muted);" id="so-stok-info">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted-foreground">Stok Tersedia:</span>
+            <span class="text-sm font-bold text-muted-foreground" id="so-stok-val">—</span>
+          </div>
+        </div>
+
+        <!-- Insufficient Stock Warning -->
+        <div class="erp-alert-danger mt-3" id="so-warning" style="display:none;">
+          <span uk-icon="icon: warning; ratio: 0.8"></span>
+          <span class="text-sm ml-2"><strong>Stok Tidak Mencukupi!</strong> Stok tersedia lebih kecil dari jumlah yang dipesan. SO akan disimpan sebagai Draft.</span>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button class="uk-btn uk-btn-primary" id="btn-create-so" onclick="createSO()">
+            <span uk-icon="icon: file-edit; ratio: 0.8"></span> Buat Sales Order
+          </button>
+          <button class="uk-btn uk-btn-ghost" onclick="resetSOForm()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Alert -->
+    <div class="erp-alert-success mb-4" id="so-success-alert" style="display:none;">
+      <span uk-icon="icon: check-circle; ratio: 0.8"></span>
+      <span class="text-sm ml-2">Sales Order berhasil dibuat! Nomor: <strong id="so-new-num"></strong></span>
+    </div>
+
+    <!-- SO List Table -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Daftar Sales Order</h3>
+        <span class="uk-badge uk-badge-primary" id="so-count-badge">8 SO</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="erp-table-wrap">
+          <table class="uk-table uk-table-divider uk-table-striped uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>No SO</th>
+                <th>Tanggal</th>
+                <th>Customer</th>
+                <th>SKU</th>
+                <th class="text-right">Qty</th>
+                <th>Satuan</th>
+                <th class="text-right">Stok Tersedia</th>
+                <th>Status</th>
+                <th class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="so-tbody">
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0008</td><td data-label="Tanggal" class="text-xs">10/05/2026</td><td data-label="Customer">PT. Segar Frozen Mart</td><td data-label="SKU" class="text-xs">SKU-001 — Daging Sapi</td><td data-label="Qty" class="text-right font-semibold">200</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">2,720</td><td data-label="Status"><span class="uk-badge">Draft</span></td><td data-label="Aksi" class="text-center">
+                  <div class="flex gap-1 justify-center">
+                    <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="confirmSO('SO-2026-0008')">Konfirmasi</button>
+                    <button class="uk-btn uk-btn-destructive uk-btn-sm text-xs" onclick="cancelSO('SO-2026-0008')">Batal</button>
+                  </div>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0007</td><td data-label="Tanggal" class="text-xs">10/05/2026</td><td data-label="Customer">CV. Berkah Sayur Abadi</td><td data-label="SKU" class="text-xs">SKU-004 — Sayur Campur</td><td data-label="Qty" class="text-right font-semibold">150</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">1,260</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Terkonfirmasi</span></td><td data-label="Aksi" class="text-center">
+                  <span class="text-xs text-muted-foreground">—</span>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0006</td><td data-label="Tanggal" class="text-xs">09/05/2026</td><td data-label="Customer">PT. Fresh Market Indonesia</td><td data-label="SKU" class="text-xs">SKU-003 — Udang Vannamei</td><td data-label="Qty" class="text-right font-semibold">300</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">2,440</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Terkonfirmasi</span></td><td data-label="Aksi" class="text-center">
+                  <span class="text-xs text-muted-foreground">—</span>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0005</td><td data-label="Tanggal" class="text-xs">09/05/2026</td><td data-label="Customer">Toko Berkah Daging</td><td data-label="SKU" class="text-xs">SKU-006 — Kentang Fries</td><td data-label="Qty" class="text-right font-semibold">100</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">2,100</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Terkonfirmasi</span></td><td data-label="Aksi" class="text-center">
+                  <span class="text-xs text-muted-foreground">—</span>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0004</td><td data-label="Tanggal" class="text-xs">08/05/2026</td><td data-label="Customer">PT. Grosir Frozen Food</td><td data-label="SKU" class="text-xs">SKU-007 — Nugget Ayam</td><td data-label="Qty" class="text-right font-semibold">50</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">80</td><td data-label="Status"><span class="uk-badge">Draft</span></td><td data-label="Aksi" class="text-center">
+                  <div class="flex gap-1 justify-center">
+                    <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="confirmSO('SO-2026-0004')">Konfirmasi</button>
+                    <button class="uk-btn uk-btn-destructive uk-btn-sm text-xs" onclick="cancelSO('SO-2026-0004')">Batal</button>
+                  </div>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0003</td><td data-label="Tanggal" class="text-xs">08/05/2026</td><td data-label="Customer">PT. Segar Frozen Mart</td><td data-label="SKU" class="text-xs">SKU-010 — Sosis Sapi</td><td data-label="Qty" class="text-right font-semibold">400</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">2,203</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Terkonfirmasi</span></td><td data-label="Aksi" class="text-center">
+                  <span class="text-xs text-muted-foreground">—</span>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0002</td><td data-label="Tanggal" class="text-xs">07/05/2026</td><td data-label="Customer">CV. Berkah Sayur Abadi</td><td data-label="SKU" class="text-xs">SKU-002 — Ayam Utuh</td><td data-label="Qty" class="text-right font-semibold">200</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right" style="color:#dc2626;font-weight:600;">-35</td><td data-label="Status"><span class="uk-badge uk-badge-destructive">Dibatalkan</span></td><td data-label="Aksi" class="text-center">
+                  <span class="text-xs text-muted-foreground">—</span>
+                </td></tr>
+              <tr><td data-label="No SO" class="font-mono text-xs font-semibold">SO-2026-0001</td><td data-label="Tanggal" class="text-xs">07/05/2026</td><td data-label="Customer">PT. Fresh Market Indonesia</td><td data-label="SKU" class="text-xs">SKU-009 — Susu UHT</td><td data-label="Qty" class="text-right font-semibold">100</td><td data-label="Satuan" class="text-xs">Karton</td><td data-label="Stok Tersedia" class="text-right font-semibold">750</td><td data-label="Status"><span class="uk-badge">Draft</span></td><td data-label="Aksi" class="text-center">
+                  <div class="flex gap-1 justify-center">
+                    <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="confirmSO('SO-2026-0001')">Konfirmasi</button>
+                    <button class="uk-btn uk-btn-destructive uk-btn-sm text-xs" onclick="cancelSO('SO-2026-0001')">Batal</button>
+                  </div>
+                </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Sales Order'); });
+
+let soCounter = 9;
+
+function updateStokTersedia() {
+  const sel = document.getElementById('so-sku');
+  const qty = parseInt(document.getElementById('so-qty').value) || 0;
+  const infoEl = document.getElementById('so-stok-info');
+  const valEl = document.getElementById('so-stok-val');
+  const warnEl = document.getElementById('so-warning');
+
+  if (!sel.value) {
+    infoEl.style.background = 'var(--muted)';
+    valEl.textContent = '—';
+    valEl.className = 'text-sm font-bold text-muted-foreground';
+    warnEl.style.display = 'none';
+    return;
+  }
+
+  const opt = sel.options[sel.selectedIndex];
+  const tersedia = parseInt(opt.getAttribute('data-tersedia')) || 0;
+
+  valEl.textContent = tersedia.toLocaleString('id-ID') + ' ktn';
+  if (tersedia <= 0 || tersedia < qty) {
+    infoEl.style.background = '#fee2e2';
+    valEl.className = 'text-sm font-bold';
+    valEl.style.color = '#991b1b';
+    warnEl.style.display = 'flex';
+  } else {
+    infoEl.style.background = '#d1fae5';
+    valEl.className = 'text-sm font-bold';
+    valEl.style.color = '#065f46';
+    warnEl.style.display = 'none';
+  }
+}
+
+function resetSOForm() {
+  document.getElementById('so-customer').value = '';
+  document.getElementById('so-sku').value = '';
+  document.getElementById('so-qty').value = '';
+  updateStokTersedia();
+}
+
+function createSO() {
+  const customer = document.getElementById('so-customer');
+  const skuSel = document.getElementById('so-sku');
+  const qty = document.getElementById('so-qty').value;
+
+  if (!customer.value || !skuSel.value || !qty) {
+    alert('Harap lengkapi semua field!');
+    return;
+  }
+
+  const opt = skuSel.options[skuSel.selectedIndex];
+  const tersedia = parseInt(opt.getAttribute('data-tersedia')) || 0;
+  const skuText = skuSel.options[skuSel.selectedIndex].text.split(' — ');
+  const isDraft = tersedia <= 0 || tersedia < parseInt(qty);
+  const soNum = 'SO-2026-' + String(soCounter).padStart(4, '0');
+  soCounter++;
+
+  const today = new Date();
+  const dateStr = String(today.getDate()).padStart(2,'0') + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + today.getFullYear();
+
+  const tbody = document.getElementById('so-tbody');
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td data-label="No SO" class="font-mono text-xs font-semibold">${soNum}</td>
+    <td data-label="Tanggal" class="text-xs">${dateStr}</td>
+    <td data-label="Customer">${customer.options[customer.selectedIndex].text}</td>
+    <td data-label="SKU" class="text-xs">${skuText[0]} — ${skuText[1] || ''}</td>
+    <td data-label="Qty" class="text-right font-semibold">${parseInt(qty).toLocaleString('id-ID')}</td>
+    <td data-label="Satuan" class="text-xs">${document.getElementById('so-unit').value}</td>
+    <td data-label="Stok Tersedia" class="text-right font-semibold" style="color:${tersedia <= 0 ? '#dc2626' : '#065f46'};">${tersedia.toLocaleString('id-ID')}</td>
+    <td data-label="Status"><span class="uk-badge">${isDraft ? 'Draft' : 'Terkonfirmasi'}</span></td>
+    <td data-label="Aksi" class="text-center">
+      <div class="flex gap-1 justify-center">
+        <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="confirmSO('${soNum}')">Konfirmasi</button>
+        <button class="uk-btn uk-btn-destructive uk-btn-sm text-xs" onclick="cancelSO('${soNum}')">Batal</button>
+      </div>
+    </td>`;
+  tbody.insertBefore(newRow, tbody.firstChild);
+
+  document.getElementById('so-new-num').textContent = soNum;
+  document.getElementById('so-success-alert').style.display = 'flex';
+  setTimeout(() => { document.getElementById('so-success-alert').style.display = 'none'; }, 5000);
+  resetSOForm();
+}
+
+function confirmSO(soNum) {
+  if (confirm('Konfirmasi Sales Order ' + soNum + '? Reservasi stok akan diproses.')) {
+    // Find the row and update
+    const rows = document.querySelectorAll('#so-tbody tr');
+    rows.forEach(row => {
+      if (row.querySelector('.font-mono')?.textContent.trim() === soNum) {
+        const statusCell = row.querySelectorAll('td')[7];
+        statusCell.innerHTML = '<span class="uk-badge uk-badge-primary">Terkonfirmasi</span>';
+        const actionCell = row.querySelectorAll('td')[8];
+        actionCell.innerHTML = '<span class="text-xs text-muted-foreground">—</span>';
+      }
+    });
+  }
+}
+
+function cancelSO(soNum) {
+  if (confirm('Batalkan Sales Order ' + soNum + '? Tindakan ini akan membatalkan reservasi stok.')) {
+    const rows = document.querySelectorAll('#so-tbody tr');
+    rows.forEach(row => {
+      if (row.querySelector('.font-mono')?.textContent.trim() === soNum) {
+        const statusCell = row.querySelectorAll('td')[7];
+        statusCell.innerHTML = '<span class="uk-badge uk-badge-destructive">Dibatalkan</span>';
+        const actionCell = row.querySelectorAll('td')[8];
+        actionCell.innerHTML = '<span class="text-xs text-muted-foreground">—</span>';
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>
