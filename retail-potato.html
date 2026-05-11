@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Retail Potato Management — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="retail-potato.html">Retail Potato</a></li>
+      <li><span>Split Box</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Retail Potato Management</h1>
+        <p class="text-sm text-muted-foreground">Split box kentang retail menjadi bungkus individu (4 bungkus × 2.5kg per box)</p>
+      </div>
+      <div class="flex gap-2">
+        <span class="uk-badge uk-badge-primary">4 Box Aktif</span>
+        <span class="uk-badge">2 Box Ter-split</span>
+      </div>
+    </div>
+
+    <!-- Split Form -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Split Box — Pilih Barcode Box</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+          <div>
+            <label class="uk-form-label">Barcode Box</label>
+            <select class="uk-select" id="box-selector" onchange="loadBoxInfo()">
+              <option value="">— Pilih Box —</option>
+              <option value="RPT-BOX-001">RPT-BOX-001 — Kentang Premium 10kg</option>
+              <option value="RPT-BOX-002">RPT-BOX-002 — Kentang Premium 10kg</option>
+              <option value="RPT-BOX-003">RPT-BOX-003 — Kentang Biasa 10kg</option>
+              <option value="RPT-BOX-004">RPT-BOX-004 — Kentang Premium 10kg</option>
+              <option value="RPT-BOX-005">RPT-BOX-005 — Kentang Biasa 10kg</option>
+              <option value="RPT-BOX-006">RPT-BOX-006 — Kentang Premium 10kg</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Informasi Box</label>
+            <input type="text" class="uk-input" id="box-info" value="" disabled placeholder="Pilih box terlebih dahulu"/>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary" id="btn-split" onclick="performSplit()" disabled>
+              <span uk-icon="icon: cut; ratio: 0.8"></span> Split Box
+            </button>
+          </div>
+        </div>
+
+        <!-- Box Info Detail (shown after selection) -->
+        <div id="box-detail" style="display:none;" class="mt-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Barcode</div>
+              <div class="text-sm font-bold font-mono" id="detail-barcode"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">SKU</div>
+              <div class="text-sm font-bold" id="detail-sku"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Lot</div>
+              <div class="text-sm font-bold font-mono" id="detail-lot"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Exp Date</div>
+              <div class="text-sm font-bold" id="detail-exp"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Total Berat</div>
+              <div class="text-sm font-bold">10 kg (4 × 2.5 kg)</div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Bungkus Tersisa</div>
+              <div class="text-sm font-bold" id="detail-remaining">4 bungkus</div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Status</div>
+              <div class="text-sm font-bold" id="detail-status">Aktif</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Split Result: New Barcodes -->
+    <div class="uk-card uk-card-default mb-4" id="split-result-card" style="display:none;">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">
+          <span uk-icon="icon: check-circle; ratio: 0.85" class="mr-1" style="color:#22c55e;"></span>
+          Hasil Split — 4 Barcode Baru
+        </h3>
+        <span class="uk-badge uk-badge-primary">Berhasil</span>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-alert-warning mb-4">
+          <span uk-icon="icon: warning; ratio: 0.85"></span>
+          <span class="ml-1 text-sm">
+            Box asli <strong id="split-original-barcode"></strong> telah dinonaktifkan. Silakan cetak label barcode baru di bawah.
+          </span>
+        </div>
+
+        <!-- Original Box Deactivated -->
+        <div class="mb-4 p-3 border border-dashed border-red-300 rounded-lg bg-red-50">
+          <div class="text-xs text-red-500 font-semibold mb-1">BOX ASLI — DINONAKTIFKAN</div>
+          <div class="text-lg font-bold font-mono" style="text-decoration: line-through; color: #999;" id="deactivated-barcode"></div>
+        </div>
+
+        <!-- New Barcode Labels -->
+        <div class="text-sm font-semibold mb-3">Label Barcode Bungkus Baru:</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="new-barcodes">
+        </div>
+
+        <div class="flex gap-2 mt-4">
+          <button class="uk-btn uk-btn-primary" onclick="printLabels()">
+            <span uk-icon="icon: print; ratio: 0.8"></span> Cetak Semua Label
+          </button>
+          <button class="uk-btn uk-btn-ghost" onclick="resetSplit()">Split Box Lain</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Inventaris Box Kentang Retail</h3>
+        <span class="text-xs text-muted-foreground">6 box tercatat</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Box Barcode</th>
+                <th>SKU</th>
+                <th>Status</th>
+                <th>Bungkus Sisa</th>
+                <th>Lot</th>
+                <th>Exp Date</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-label="Box Barcode" class="font-mono text-xs font-semibold">RPT-BOX-001</td>
+                <td data-label="SKU">Kentang Frozen 10kg</td>
+                <td data-label="Status"><span class="uk-badge" style="background:#d1fae5;color:#065f46;">Aktif</span></td>
+                <td data-label="Bungkus Sisa">4 bungkus</td>
+                <td data-label="Lot" class="font-mono text-xs">LOT-KT-0421</td>
+                <td data-label="Exp Date">15/06/2026</td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-primary uk-btn-sm" onclick="loadBoxInfo()">Split</button></td>
+              </tr>
+              <tr>
+                <td data-label="Box Barcode" class="font-mono text-xs font-semibold">RPT-BOX-002</td>
+                <td data-label="SKU">Kentang Frozen 10kg</td>
+                <td data-label="Status"><span class="uk-badge" style="background:#d1fae5;color:#065f46;">Aktif</span></td>
+                <td data-label="Bungkus Sisa">4 bungkus</td>
+                <td data-label="Lot" class="font-mono text-xs">LOT-KT-0422</td>
+                <td data-label="Exp Date">18/06/2026</td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-primary uk-btn-sm" onclick="loadBoxInfo()">Split</button></td>
+              </tr>
+              <tr style="background:#fffbeb;">
+                <td data-label="Box Barcode" class="font-mono text-xs font-semibold">RPT-BOX-003</td>
+                <td data-label="SKU">Kentang Frozen 10kg</td>
+                <td data-label="Status"><span class="uk-badge" style="background:#fef3c7;color:#92400e;">Partial Split</span></td>
+                <td data-label="Bungkus Sisa">2 bungkus</td>
+                <td data-label="Lot" class="font-mono text-xs">LOT-KT-0423</td>
+                <td data-label="Exp Date">12/05/2026</td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-ghost uk-btn-sm">Lihat Sisa</button></td>
+              </tr>
+              <tr style="opacity:.5;">
+                <td data-label="Box Barcode" class="font-mono text-xs font-semibold"><s>RPT-BOX-004</s></td>
+                <td data-label="SKU">Kentang Frozen 10kg</td>
+                <td data-label="Status"><span class="uk-badge uk-badge-destructive">Ter-split</span></td>
+                <td data-label="Bungkus Sisa">0 bungkus</td>
+                <td data-label="Lot" class="font-mono text-xs">LOT-KT-0424</td>
+                <td data-label="Exp Date">10/05/2026</td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-ghost uk-btn-sm" disabled>Selesai</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partial Split Warning -->
+    <div class="erp-alert-warning mb-4">
+      <span uk-icon="icon: info; ratio: 0.85"></span>
+      <span class="ml-1 text-sm">
+        <strong>Catatan:</strong> Box RPT-BOX-003 baru ter-split 2 dari 4 bungkus. Sisa 2 bungkus masih aktif di inventaris.
+        Gunakan menu Split untuk memproses sisa bungkus.
+      </span>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold">6</div>
+          <div class="text-xs text-muted-foreground">Total Box</div>
+        </div>
+      </div>
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold" style="color:var(--primary);">4</div>
+          <div class="text-xs text-muted-foreground">Bungkus Aktif (16 bungkus)</div>
+        </div>
+      </div>
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold" style="color:#999;">8</div>
+          <div class="text-xs text-muted-foreground">Bungkus Terjual / Ter-split</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Retail Potato Management'); });
+
+const boxData = {
+  'RPT-BOX-001': { sku: 'Kentang Premium 10kg', lot: 'LOT-KT-2026-041', exp: '20/05/2026', remaining: 4, status: 'Aktif' },
+  'RPT-BOX-002': { sku: 'Kentang Premium 10kg', lot: 'LOT-KT-2026-041', exp: '20/05/2026', remaining: 4, status: 'Aktif' },
+  'RPT-BOX-003': { sku: 'Kentang Biasa 10kg', lot: 'LOT-KT-2026-038', exp: '18/05/2026', remaining: 2, status: 'Partial Split' },
+  'RPT-BOX-004': { sku: 'Kentang Premium 10kg', lot: 'LOT-KT-2026-042', exp: '22/05/2026', remaining: 4, status: 'Aktif' },
+  'RPT-BOX-005': { sku: 'Kentang Biasa 10kg', lot: 'LOT-KT-2026-035', exp: '15/05/2026', remaining: 0, status: 'Ter-split' },
+  'RPT-BOX-006': { sku: 'Kentang Premium 10kg', lot: 'LOT-KT-2026-040', exp: '17/05/2026', remaining: 0, status: 'Ter-split' }
+};
+
+function loadBoxInfo() {
+  const sel = document.getElementById('box-selector').value;
+  const infoEl = document.getElementById('box-info');
+  const detailEl = document.getElementById('box-detail');
+  const btnSplit = document.getElementById('btn-split');
+
+  if (!sel || !boxData[sel]) {
+    infoEl.value = '';
+    detailEl.style.display = 'none';
+    btnSplit.disabled = true;
+    return;
+  }
+
+  const b = boxData[sel];
+  infoEl.value = sel + ' — ' + b.sku + ' — Sisa: ' + b.remaining + '/4 bungkus';
+  document.getElementById('detail-barcode').textContent = sel;
+  document.getElementById('detail-sku').textContent = b.sku;
+  document.getElementById('detail-lot').textContent = b.lot;
+  document.getElementById('detail-exp').textContent = b.exp;
+  document.getElementById('detail-remaining').textContent = b.remaining + ' bungkus';
+  document.getElementById('detail-status').textContent = b.status;
+
+  detailEl.style.display = 'block';
+  btnSplit.disabled = (b.remaining === 0);
+}
+
+function performSplit() {
+  const sel = document.getElementById('box-selector').value;
+  if (!sel || !boxData[sel]) return;
+
+  const b = boxData[sel];
+  if (b.remaining === 0) {
+    alert('Box ini sudah ter-split semua!');
+    return;
+  }
+
+  const suffix = ['A', 'B', 'C', 'D'];
+  const barcodesEl = document.getElementById('new-barcodes');
+  barcodesEl.innerHTML = '';
+
+  for (let i = 0; i < b.remaining; i++) {
+    const bc = sel + '-' + suffix[i];
+    barcodesEl.innerHTML += `
+      <div class="erp-barcode-label border border-gray-300 rounded-lg p-3 text-center" style="background:#fafafa;">
+        <div class="barcode-lines mb-2" style="display:flex;justify-content:center;gap:1px;height:40px;align-items:flex-end;">
+          ${generateBarcodeLines()}
+        </div>
+        <div class="barcode-text font-mono text-xs font-bold">${bc}</div>
+        <div class="text-xs text-muted-foreground mt-1">2.5 kg — ${b.sku}</div>
+        <div class="text-xs text-muted-foreground">Lot: ${b.lot}</div>
+        <div class="text-xs text-muted-foreground">Exp: ${b.exp}</div>
+      </div>`;
+  }
+
+  document.getElementById('split-original-barcode').textContent = sel;
+  document.getElementById('deactivated-barcode').textContent = sel;
+  document.getElementById('split-result-card').style.display = 'block';
+
+  b.remaining = 0;
+  b.status = 'Ter-split';
+  loadBoxInfo();
+}
+
+function generateBarcodeLines() {
+  let lines = '';
+  for (let i = 0; i < 30; i++) {
+    const w = Math.random() > 0.5 ? 2 : 1;
+    const h = 20 + Math.random() * 20;
+    lines += `<div style="width:${w}px;height:${h}px;background:#000;"></div>`;
+  }
+  return lines;
+}
+
+function printLabels() {
+  alert('Mencetak label barcode... (simulasi)');
+}
+
+function resetSplit() {
+  document.getElementById('split-result-card').style.display = 'none';
+  document.getElementById('box-selector').value = '';
+  loadBoxInfo();
+}
+
+function selectBox(barcode) {
+  document.getElementById('box-selector').value = barcode;
+  loadBoxInfo();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
