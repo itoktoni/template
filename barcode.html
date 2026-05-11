@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Generate Barcode — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="barcode.html">Gudang</a></li>
+      <li><span>Generate Barcode</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Generate Barcode</h1>
+        <p class="text-sm text-muted-foreground">Cetak barcode label untuk kemasan dari GRN Draft</p>
+      </div>
+    </div>
+
+    <!-- GRN Selector Card -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Pilih GRN</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="uk-form-label">GRN Draft</label>
+            <select class="uk-select" id="barcode-grn-select">
+              <option value="">— Pilih GRN —</option>
+              <option value="GRN-2026-0008">GRN-2026-0008 — SKU-001 Daging Sapi — 120 ktn</option>
+              <option value="GRN-2026-0007">GRN-2026-0007 — SKU-003 Udang Vannamei — 80 ktn</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Jumlah Label per Kemasan</label>
+            <select class="uk-select" id="barcode-qty">
+              <option value="1">1 Label</option>
+              <option value="2">2 Label</option>
+              <option value="3" selected>3 Label</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary w-full" id="btn-generate-barcode" onclick="generateBarcodes()">
+              <span uk-icon="icon: barcode; ratio: 0.8"></span> Generate Barcode
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Packages to Print -->
+    <div class="uk-card uk-card-default mb-4" id="packages-card" style="display:none;">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Daftar Kemasan — <span id="selected-grn-label"></span></h3>
+        <div class="flex gap-2">
+          <button class="uk-btn uk-btn-secondary uk-btn-sm text-xs" onclick="selectAllPackages()">Pilih Semua</button>
+          <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="printSelected()">
+            <span uk-icon="icon: printer; ratio: 0.8"></span> Cetak Terpilih
+          </button>
+        </div>
+      </div>
+      <div class="uk-card-body p-0">
+        <table class="uk-table uk-table-divider uk-table-striped uk-table-small text-sm">
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" class="uk-checkbox" id="check-all" onclick="toggleAllCheckboxes(this)"/></th>
+              <th>Pallet</th>
+              <th>Kode Barcode</th>
+              <th>SKU</th>
+              <th>Lot</th>
+              <th>Tgl Exp</th>
+              <th>Berat</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="packages-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bulk Print Preview -->
+    <div class="uk-card uk-card-default mb-4" id="print-preview-card" style="display:none;">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Preview Cetak — <span id="preview-count"></span> Label</h3>
+        <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="window.print()">
+          <span uk-icon="icon: printer; ratio: 0.8"></span> Cetak Semua
+        </button>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="barcode-grid">
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="uk-card uk-card-default" id="empty-state">
+      <div class="uk-card-body text-center py-8">
+        <span uk-icon="icon: barcode; ratio: 2" class="text-muted-foreground"></span>
+        <p class="text-sm text-muted-foreground mt-2">Pilih GRN draft di atas untuk mulai generate barcode</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Generate Barcode'); });
+
+const barcodeData = [
+  { code: 'CS-2026-00001', sku: 'SKU-001 — Daging Sapi Frozen', lot: 'LOT-2026-001', exp: '10/11/2026', weight: '1.0 kg', supplier: 'PT. FrozenFood Indonesia' },
+  { code: 'CS-2026-00002', sku: 'SKU-001 — Daging Sapi Frozen', lot: 'LOT-2026-001', exp: '10/11/2026', weight: '1.0 kg', supplier: 'PT. FrozenFood Indonesia' },
+  { code: 'CS-2026-00003', sku: 'SKU-001 — Daging Sapi Frozen', lot: 'LOT-2026-002', exp: '10/11/2026', weight: '1.0 kg', supplier: 'PT. FrozenFood Indonesia' },
+  { code: 'CS-2026-00004', sku: 'SKU-001 — Daging Sapi Frozen', lot: 'LOT-2026-002', exp: '12/11/2026', weight: '1.0 kg', supplier: 'PT. FrozenFood Indonesia' },
+  { code: 'CS-2026-00005', sku: 'SKU-003 — Udang Vannamei 500g', lot: 'LOT-2026-003', exp: '08/11/2026', weight: '0.5 kg', supplier: 'CV. Sejati Lautan Segar' },
+  { code: 'CS-2026-00006', sku: 'SKU-003 — Udang Vannamei 500g', lot: 'LOT-2026-003', exp: '08/11/2026', weight: '0.5 kg', supplier: 'CV. Sejati Lautan Segar' },
+  { code: 'CS-2026-00007', sku: 'SKU-002 — Ayam Utuh Frozen', lot: 'LOT-2026-004', exp: '15/11/2026', weight: '1.2 kg', supplier: 'PT. Agro Fresh Supply' },
+  { code: 'CS-2026-00008', sku: 'SKU-002 — Ayam Utuh Frozen', lot: 'LOT-2026-004', exp: '15/11/2026', weight: '1.2 kg', supplier: 'PT. Agro Fresh Supply' },
+  { code: 'CS-2026-00009', sku: 'SKU-005 — Salmon Fillet 400g', lot: 'LOT-2026-005', exp: '05/11/2026', weight: '0.4 kg', supplier: 'CV. Nordic Seafood Import' },
+  { code: 'CS-2026-00010', sku: 'SKU-006 — Kentang Frozen Fries', lot: 'LOT-2026-006', exp: '20/12/2026', weight: '1.0 kg', supplier: 'PT. Agro Fresh Supply' },
+  { code: 'CS-2026-00011', sku: 'SKU-004 — Sayur Campur Frozen', lot: 'LOT-2026-007', exp: '01/12/2026', weight: '1.0 kg', supplier: 'PT. Agro Fresh Supply' },
+  { code: 'CS-2026-00012', sku: 'SKU-007 — Nugget Ayam 500g', lot: 'LOT-2026-008', exp: '18/11/2026', weight: '0.5 kg', supplier: 'PT. FrozenFood Indonesia' },
+];
+
+const packagesForGRN8 = [
+  { pallet: 'PLT-001', code: 'CS-2026-00001', sku: 'SKU-001 — Daging Sapi', lot: 'LOT-2026-001', exp: '10/11/2026', weight: '12.0 kg', status: 'Siap Cetak' },
+  { pallet: 'PLT-001', code: 'CS-2026-00002', sku: 'SKU-001 — Daging Sapi', lot: 'LOT-2026-001', exp: '10/11/2026', weight: '12.0 kg', status: 'Siap Cetak' },
+  { pallet: 'PLT-002', code: 'CS-2026-00003', sku: 'SKU-001 — Daging Sapi', lot: 'LOT-2026-002', exp: '10/11/2026', weight: '12.0 kg', status: 'Siap Cetak' },
+  { pallet: 'PLT-002', code: 'CS-2026-00004', sku: 'SKU-001 — Daging Sapi', lot: 'LOT-2026-002', exp: '12/11/2026', weight: '12.0 kg', status: 'Siap Cetak' },
+];
+
+const packagesForGRN7 = [
+  { pallet: 'PLT-005', code: 'CS-2026-00005', sku: 'SKU-003 — Udang Vannamei', lot: 'LOT-2026-003', exp: '08/11/2026', weight: '10.0 kg', status: 'Siap Cetak' },
+  { pallet: 'PLT-005', code: 'CS-2026-00006', sku: 'SKU-003 — Udang Vannamei', lot: 'LOT-2026-003', exp: '08/11/2026', weight: '10.0 kg', status: 'Siap Cetak' },
+];
+
+function generateBarcodes() {
+  const grnVal = document.getElementById('barcode-grn-select').value;
+  if (!grnVal) { alert('Pilih GRN terlebih dahulu!'); return; }
+
+  const isGRN8 = grnVal === 'GRN-2026-0008';
+  const pkgs = isGRN8 ? packagesForGRN8 : packagesForGRN7;
+  const labels = isGRN8 ? barcodeData.slice(0, 4) : barcodeData.slice(4, 6);
+
+  // Show packages table
+  document.getElementById('selected-grn-label').textContent = grnVal;
+  document.getElementById('packages-card').style.display = 'block';
+  document.getElementById('empty-state').style.display = 'none';
+
+  const tbody = document.getElementById('packages-tbody');
+  tbody.innerHTML = pkgs.map((p, i) => `
+    <tr>
+      <td data-label="✓"><input type="checkbox" class="uk-checkbox pkg-check" value="${i}"/></td>
+      <td data-label="Pallet" class="font-mono text-xs">${p.pallet}</td>
+      <td data-label="Kode Barcode" class="font-mono text-xs">${p.code}</td>
+      <td data-label="SKU">${p.sku}</td>
+      <td data-label="Lot" class="font-mono text-xs">${p.lot}</td>
+      <td data-label="Tgl Exp">${p.exp}</td>
+      <td data-label="Berat">${p.weight}</td>
+      <td data-label="Status"><span class="uk-badge">${p.status}</span></td>
+    </tr>
+  `).join('');
+
+  // Build barcode labels
+  const qty = parseInt(document.getElementById('barcode-qty').value);
+  const allLabels = [];
+  labels.forEach(l => { for (let q = 0; q < qty; q++) allLabels.push(l); });
+
+  const grid = document.getElementById('barcode-grid');
+  grid.innerHTML = allLabels.map(l => `
+    <div class="erp-barcode-label p-3 border border-gray-200 rounded-lg text-center bg-white">
+      <div class="text-xs font-semibold mb-1">${l.supplier}</div>
+      <div class="barcode-lines mx-auto my-2" style="height:40px;width:120px;background:repeating-linear-gradient(90deg,#000 0px,#000 2px,transparent 2px,transparent 4px,#000 4px,#000 5px,transparent 5px,transparent 8px);border-radius:2px;"></div>
+      <div class="font-mono text-xs font-bold mb-1 barcode-text">${l.code}</div>
+      <div class="text-xs text-muted-foreground">${l.sku}</div>
+      <div class="text-xs text-muted-foreground">Lot: ${l.lot}</div>
+      <div class="text-xs text-muted-foreground">Exp: ${l.exp} | ${l.weight}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('preview-count').textContent = allLabels.length;
+  document.getElementById('print-preview-card').style.display = 'block';
+}
+
+function toggleAllCheckboxes(el) {
+  document.querySelectorAll('.pkg-check').forEach(c => { c.checked = el.checked; });
+}
+
+function selectAllPackages() {
+  document.querySelectorAll('.pkg-check').forEach(c => { c.checked = true; });
+}
+
+function printSelected() {
+  const checked = document.querySelectorAll('.pkg-check:checked');
+  if (checked.length === 0) { alert('Pilih minimal 1 kemasan untuk dicetak!'); return; }
+  window.print();
+}
+
+document.getElementById('barcode-grn-select').addEventListener('change', function() {
+  if (!this.value) {
+    document.getElementById('packages-card').style.display = 'none';
+    document.getElementById('print-preview-card').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
