@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Forklift Task — Picking — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="forklift-picking.html">Outbound</a></li>
+      <li><span>Picking Task</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Forklift Task — Picking</h1>
+        <p class="text-sm text-muted-foreground">Ambil kemasan dari lokasi rack sesuai urutan FEFO untuk Delivery Order</p>
+      </div>
+      <div class="flex gap-2">
+        <span class="uk-badge uk-badge-primary">4 Task Aktif</span>
+      </div>
+    </div>
+
+    <!-- DO Selector -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Pilih Delivery Order</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+          <div>
+            <label class="uk-form-label">Delivery Order</label>
+            <select class="uk-select" id="do-selector" onchange="loadDOTasks()">
+              <option value="DO-0045">DO-0045 — PT. Sejahtera Frozen</option>
+              <option value="DO-0044">DO-0044 — CV. Berkah Lautan</option>
+              <option value="DO-0043">DO-0043 — PT. Agro Makmur</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Total Item</label>
+            <input type="text" class="uk-input" value="4 items / 120 ktn" disabled/>
+          </div>
+          <div>
+            <label class="uk-form-label">Status DO</label>
+            <input type="text" class="uk-input" value="In Progress — Picking" disabled/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Queue Table -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Antrian Picking Task</h3>
+        <span class="text-xs text-muted-foreground">DO-0045</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Task ID</th>
+                <th>DO Ref</th>
+                <th>Rack Sumber</th>
+                <th>Level</th>
+                <th>Pallet ID</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-label="Task ID" class="font-semibold">TKP-001</td>
+                <td data-label="DO Ref">DO-0045</td>
+                <td data-label="Rack Sumber">Rack C-12</td>
+                <td data-label="Level">L1</td>
+                <td data-label="Pallet ID">PLT-0089</td>
+                <td data-label="Status"><span class="uk-badge uk-badge-primary">In Progress</span></td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-primary uk-btn-sm" onclick="scanPallet()">Scan</button></td>
+              </tr>
+              <tr>
+                <td data-label="Task ID" class="font-semibold">TKP-002</td>
+                <td data-label="DO Ref">DO-0045</td>
+                <td data-label="Rack Sumber">Rack A-08</td>
+                <td data-label="Level">L3</td>
+                <td data-label="Pallet ID">PLT-0091</td>
+                <td data-label="Status"><span class="uk-badge" style="background:#fef3c7;color:#92400e;">Pending</span></td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-ghost uk-btn-sm" disabled>Menunggu</button></td>
+              </tr>
+              <tr>
+                <td data-label="Task ID" class="font-semibold">TKP-003</td>
+                <td data-label="DO Ref">DO-0046</td>
+                <td data-label="Rack Sumber">Rack B-05</td>
+                <td data-label="Level">L2</td>
+                <td data-label="Pallet ID">PLT-0095</td>
+                <td data-label="Status"><span class="uk-badge" style="background:#fef3c7;color:#92400e;">Pending</span></td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-ghost uk-btn-sm" disabled>Menunggu</button></td>
+              </tr>
+              <tr>
+                <td data-label="Task ID" class="font-semibold">TKP-004</td>
+                <td data-label="DO Ref">DO-0046</td>
+                <td data-label="Rack Sumber">Rack D-11</td>
+                <td data-label="Level">L1</td>
+                <td data-label="Pallet ID">PLT-0102</td>
+                <td data-label="Status"><span class="uk-badge" style="background:#d1fae5;color:#065f46;">Selesai</span></td>
+                <td data-label="Aksi"><button class="uk-btn uk-btn-ghost uk-btn-sm">Riwayat</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Task Card -->
+    <div class="uk-card uk-card-default mb-4" id="active-task-card">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">
+          <span uk-icon="icon: check-circle; ratio: 0.85" class="mr-1" style="color:var(--primary);"></span>
+          Task Aktif — TKP-001
+        </h3>
+        <span class="uk-badge uk-badge-primary">Sedang Dikerjakan</span>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Pallet ID</div>
+            <div class="text-sm font-bold font-mono">PLT-2026-0891</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Lokasi Sumber</div>
+            <div class="text-sm font-bold">Rack R-A03 — Level L2</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Barcode Kemasan</div>
+            <div class="text-sm font-bold font-mono">CS-2026-04521</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">FEFO — Exp Date</div>
+            <div class="text-sm font-bold">12/05/2026</div>
+            <div class="text-xs text-muted-foreground">SKU-003 — Udang Vannamei 500g</div>
+          </div>
+        </div>
+
+        <!-- FEFO Info Box -->
+        <div class="erp-alert-warning mb-4">
+          <span uk-icon="icon: clock; ratio: 0.85"></span>
+          <span class="ml-1 text-sm">
+            <strong>FEFO Validation:</strong> Kemasan ini harus diambil duluan karena kedaluwarsa paling dekat.
+            Exp date: <strong>12/05/2026</strong> — Prioritas tertinggi dari 3 batch di lokasi ini.
+          </span>
+        </div>
+
+        <!-- Scan Confirmation Section -->
+        <div class="uk-card uk-card-default mb-3" style="background:#f8fafc;">
+          <div class="uk-card-body">
+            <div class="text-sm font-semibold mb-3">Konfirmasi Picking — Scan Barcode</div>
+            <div class="erp-form-grid" style="grid-template-columns: 1fr auto;">
+              <div>
+                <label class="uk-form-label">Scan Barcode Kemasan</label>
+                <input type="text" class="uk-input uk-form-large font-mono" placeholder="Arahkan scanner ke barcode kemasan..." id="scan-picking-input" autofocus/>
+              </div>
+              <div class="flex items-end">
+                <button class="uk-btn uk-btn-primary" onclick="validatePickingScan()">
+                  <span uk-icon="icon: check; ratio: 0.8"></span> Validasi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scan Result Alerts -->
+        <div class="erp-alert-danger mb-3" id="scan-wrong-alert" style="display:none;">
+          <span uk-icon="icon: warning; ratio: 0.9"></span>
+          <span class="ml-2 text-sm">
+            <strong>ERROR — Barcode Salah!</strong> Barcode yang dipindai tidak sesuai dengan kemasan yang harus diambil.
+            Yang harus dipindai: <strong>CS-2026-04521</strong>. Silakan coba lagi atau laporkan ke supervisor.
+          </span>
+        </div>
+
+        <div class="erp-alert-success mb-3" id="scan-success-alert" style="display:none;">
+          <span uk-icon="icon: check-circle; ratio: 0.9"></span>
+          <span class="ml-2 text-sm">
+            <strong>Picking Berhasil!</strong> Kemasan CS-2026-04521 terkonfirmasi. Task TKP-001 selesai.
+          </span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-2 mt-4">
+          <button class="uk-btn uk-btn-secondary" onclick="flagIssue()">
+            <span uk-icon="icon: warning; ratio: 0.8"></span> Laporkan Masalah
+          </button>
+          <button class="uk-btn uk-btn-ghost" onclick="skipTask()">Skip Task</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Summary -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Progress Picking — DO-0045</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-xs text-muted-foreground">1 dari 4 task selesai</span>
+          <span class="text-xs font-semibold">25%</span>
+        </div>
+        <uk-progress value="1" max="4"></uk-progress>
+        <div class="flex gap-4 mt-3 text-xs text-muted-foreground">
+          <span>✅ Selesai: 1</span>
+          <span>🔄 Aktif: 1</span>
+          <span>⏳ Menunggu: 2</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Forklift Task — Picking'); });
+
+const taskData = {
+  1: { id: 'TKP-001', pallet: 'PLT-2026-0891', rack: 'R-A03', level: 'L2', barcode: 'CS-2026-04521', exp: '12/05/2026', sku: 'SKU-003 — Udang Vannamei 500g' },
+  2: { id: 'TKP-002', pallet: 'PLT-2026-0905', rack: 'R-B01', level: 'L3', barcode: 'CS-2026-04603', exp: '15/05/2026', sku: 'SKU-001 — Daging Sapi Frozen 1kg' },
+  3: { id: 'TKP-003', pallet: 'PLT-2026-0878', rack: 'R-A03', level: 'L4', barcode: 'CS-2026-04489', exp: '18/05/2026', sku: 'SKU-005 — Ikan Salmon Fillet 400g' },
+  4: { id: 'TKP-004', pallet: 'PLT-2026-0912', rack: 'R-C02', level: 'L1', barcode: 'CS-2026-04712', exp: '22/05/2026', sku: 'SKU-002 — Ayam Utuh Frozen 1.2kg' }
+};
+
+function activateTask(num) {
+  const t = taskData[num];
+  // Highlight row
+  document.querySelectorAll('table tbody tr').forEach(r => r.style.background = '');
+  document.getElementById('task-row-' + num).style.background = '#eff6ff';
+  // Update active task card
+  document.getElementById('active-task-card').querySelector('.uk-card-title').innerHTML =
+    `<span uk-icon="icon: check-circle; ratio: 0.85" class="mr-1" style="color:var(--primary);"></span> Task Aktif — ${t.id}`;
+  // Reset alerts
+  document.getElementById('scan-wrong-alert').style.display = 'none';
+  document.getElementById('scan-success-alert').style.display = 'none';
+  document.getElementById('scan-picking-input').value = '';
+  document.getElementById('scan-picking-input').focus();
+}
+
+function loadDOTasks() {
+  const doVal = document.getElementById('do-selector').value;
+  alert('Memuat task untuk ' + doVal + '...');
+}
+
+let currentTask = 1;
+
+function validatePickingScan() {
+  const input = document.getElementById('scan-picking-input').value.trim();
+  const t = taskData[currentTask];
+  document.getElementById('scan-wrong-alert').style.display = 'none';
+  document.getElementById('scan-success-alert').style.display = 'none';
+  if (input === t.barcode) {
+    document.getElementById('scan-success-alert').style.display = 'flex';
+  } else {
+    document.getElementById('scan-wrong-alert').style.display = 'flex';
+  }
+}
+
+function flagIssue() {
+  alert('Laporan masalah telah dikirim ke supervisor. Tim akan segera merespons.');
+}
+
+function skipTask() {
+  alert('Task di-skip. Lanjut ke task berikutnya.');
+}
+</script>
+</body>
+</html>
