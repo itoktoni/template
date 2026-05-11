@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Putaway Management — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="putaway.html">Inbound</a></li>
+      <li><span>Putaway Management</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Putaway Management</h1>
+        <p class="text-sm text-muted-foreground">Scan barcode kemasan untuk lokasi penempatan optimal (FEFO-aware)</p>
+      </div>
+      <div class="flex gap-2">
+        <span class="uk-badge">7 Hari Ini</span>
+      </div>
+    </div>
+
+    <!-- Scan & Recommendation Form -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Scan Kemasan Barcode</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: 1fr auto;">
+          <div>
+            <label class="uk-form-label">Barcode Kemasan</label>
+            <input type="text" class="uk-input uk-form-large font-mono" placeholder="Scan atau ketik barcode kemasan..." id="putaway-scan-input"/>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary" onclick="scanBarcode()">
+              <span uk-icon="icon: search; ratio: 0.8"></span> Cari
+            </button>
+          </div>
+        </div>
+
+        <!-- Recommendation Result -->
+        <div id="recommendation-box" class="mt-4" style="display:none;">
+          <div class="erp-alert-success mb-3">
+            <span uk-icon="icon: info; ratio: 0.85"></span>
+            <span class="ml-2 text-sm">
+              <strong>Rekomendasi Sistem:</strong> Rack <strong>R-A02</strong>, Level <strong>L3</strong> — FEFO prioritized, paling dekat dengan batch sejenis.
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">SKU</div>
+              <div class="text-sm font-bold">SKU-003</div>
+              <div class="text-xs text-muted-foreground">Udang Vannamei 500g</div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Batch / Lot</div>
+              <div class="text-sm font-bold font-mono">LOT-2026-0312</div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Exp Date</div>
+              <div class="text-sm font-bold">08/06/2026</div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Jumlah</div>
+              <div class="text-sm font-bold">120 ktn</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual Assignment -->
+        <div class="mt-4 pt-3 border-t border-gray-200">
+          <div class="text-sm font-semibold mb-2">Manual Assignment (Override)</div>
+          <div class="erp-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div>
+              <label class="uk-form-label">Rack</label>
+              <select class="uk-select" id="manual-rack">
+                <option value="">— Pilih Rack —</option>
+                <option value="R-A01">R-A01</option>
+                <option value="R-A02">R-A02</option>
+                <option value="R-A03">R-A03</option>
+                <option value="R-B01">R-B01</option>
+                <option value="R-B02">R-B02</option>
+                <option value="R-B03">R-B03</option>
+                <option value="R-C01">R-C01</option>
+                <option value="R-C02">R-C02</option>
+              </select>
+            </div>
+            <div>
+              <label class="uk-form-label">Level</label>
+              <select class="uk-select" id="manual-level">
+                <option value="">— Pilih Level —</option>
+                <option value="L1">L1 (Ground)</option>
+                <option value="L2">L2</option>
+                <option value="L3">L3</option>
+                <option value="L4">L4 (Top)</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button class="uk-btn uk-btn-secondary" onclick="assignManual()">
+                <span uk-icon="icon: move; ratio: 0.8"></span> Assign Manual
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert: Manual Assign Success -->
+    <div class="erp-alert-success mb-4" id="assign-success-alert" style="display:none;">
+      <span uk-icon="icon: check-circle; ratio: 0.85"></span>
+      <span class="ml-2 text-sm">Putaway berhasil dikonfirmasi! Pallet telah dipindahkan ke lokasi tujuan.</span>
+    </div>
+
+    <!-- Rack Map Visual -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Peta Rak — Pemetaan Rack</h3>
+        <div class="flex gap-3 text-xs">
+          <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded" style="background:#d1fae5;"></span> Kosong</span>
+          <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded" style="background:#fef3c7;"></span> Sebagian</span>
+          <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded" style="background:#fee2e2;"></span> Penuh</span>
+        </div>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          <!-- Rack A01 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-A01</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level empty">L4<br><span class="text-xs opacity-60">0/6</span></div>
+              <div class="erp-rack-level empty">L3<br><span class="text-xs opacity-60">0/6</span></div>
+              <div class="erp-rack-level partial">L2<br><span class="text-xs opacity-60">3/6</span></div>
+              <div class="erp-rack-level full">L1<br><span class="text-xs opacity-60">6/6</span></div>
+            </div>
+          </div>
+          <!-- Rack A02 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-A02</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level partial">L4<br><span class="text-xs opacity-60">2/6</span></div>
+              <div class="erp-rack-level full">L3<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level partial">L2<br><span class="text-xs opacity-60">4/6</span></div>
+              <div class="erp-rack-level empty">L1<br><span class="text-xs opacity-60">0/6</span></div>
+            </div>
+          </div>
+          <!-- Rack A03 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-A03</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full">L4<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level partial">L3<br><span class="text-xs opacity-60">5/6</span></div>
+              <div class="erp-rack-level full">L2<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level partial">L1<br><span class="text-xs opacity-60">3/6</span></div>
+            </div>
+          </div>
+          <!-- Rack B01 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-B01</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level partial">L4<br><span class="text-xs opacity-60">1/6</span></div>
+              <div class="erp-rack-level full">L3<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level empty">L2<br><span class="text-xs opacity-60">0/6</span></div>
+              <div class="erp-rack-level partial">L1<br><span class="text-xs opacity-60">2/6</span></div>
+            </div>
+          </div>
+          <!-- Rack B02 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-B02</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full">L4<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level partial">L3<br><span class="text-xs opacity-60">4/6</span></div>
+              <div class="erp-rack-level partial">L2<br><span class="text-xs opacity-60">3/6</span></div>
+              <div class="erp-rack-level empty">L1<br><span class="text-xs opacity-60">0/6</span></div>
+            </div>
+          </div>
+          <!-- Rack B03 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-B03</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level empty">L4<br><span class="text-xs opacity-60">0/6</span></div>
+              <div class="erp-rack-level empty">L3<br><span class="text-xs opacity-60">0/6</span></div>
+              <div class="erp-rack-level partial">L2<br><span class="text-xs opacity-60">2/6</span></div>
+              <div class="erp-rack-level full">L1<br><span class="text-xs opacity-60">6/6</span></div>
+            </div>
+          </div>
+          <!-- Rack C01 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-C01</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level partial">L4<br><span class="text-xs opacity-60">3/6</span></div>
+              <div class="erp-rack-level partial">L3<br><span class="text-xs opacity-60">2/6</span></div>
+              <div class="erp-rack-level full">L2<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level empty">L1<br><span class="text-xs opacity-60">0/6</span></div>
+            </div>
+          </div>
+          <!-- Rack C02 -->
+          <div class="text-center">
+            <div class="text-xs font-semibold mb-1">R-C02</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level empty">L4<br><span class="text-xs opacity-60">0/6</span></div>
+              <div class="erp-rack-level full">L3<br><span class="text-xs opacity-60">6/6</span></div>
+              <div class="erp-rack-level partial">L2<br><span class="text-xs opacity-60">1/6</span></div>
+              <div class="erp-rack-level partial">L1<br><span class="text-xs opacity-60">4/6</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Putaway Actions -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Riwayat Putaway Hari Ini</h3>
+        <span class="uk-badge uk-badge-primary">7 Record</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Barcode</th>
+                <th>SKU</th>
+                <th>Pallet</th>
+                <th>Rack</th>
+                <th>Level</th>
+                <th>Operator</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td data-label="Waktu">10/05 15:42</td><td data-label="Barcode">CS-2026-04723</td><td data-label="SKU">SKU-001 — Daging Sapi</td><td data-label="Pallet">PLT-2026-0934</td><td data-label="Rack">R-A02</td><td data-label="Level">L4</td><td data-label="Operator">Andi (FK-03)</td></tr>
+              <tr><td data-label="Waktu">10/05 15:18</td><td data-label="Barcode">CS-2026-04720</td><td data-label="SKU">SKU-003 — Udang Vannamei</td><td data-label="Pallet">PLT-2026-0933</td><td data-label="Rack">R-B02</td><td data-label="Level">L3</td><td data-label="Operator">Budi (FK-01)</td></tr>
+              <tr><td data-label="Waktu">10/05 14:55</td><td data-label="Barcode">CS-2026-04718</td><td data-label="SKU">SKU-002 — Ayam Utuh</td><td data-label="Pallet">PLT-2026-0932</td><td data-label="Rack">R-C01</td><td data-label="Level">L4</td><td data-label="Operator">Andi (FK-03)</td></tr>
+              <tr><td data-label="Waktu">10/05 14:30</td><td data-label="Barcode">CS-2026-04715</td><td data-label="SKU">SKU-005 — Salmon Fillet</td><td data-label="Pallet">PLT-2026-0931</td><td data-label="Rack">R-A03</td><td data-label="Level">L3</td><td data-label="Operator">Citra (FK-02)</td></tr>
+              <tr><td data-label="Waktu">10/05 13:48</td><td data-label="Barcode">CS-2026-04710</td><td data-label="SKU">SKU-004 — Sayur Campur</td><td data-label="Pallet">PLT-2026-0928</td><td data-label="Rack">R-B03</td><td data-label="Level">L2</td><td data-label="Operator">Budi (FK-01)</td></tr>
+              <tr><td data-label="Waktu">10/05 13:12</td><td data-label="Barcode">CS-2026-04705</td><td data-label="SKU">SKU-006 — Kentang Fries</td><td data-label="Pallet">PLT-2026-0925</td><td data-label="Rack">R-B01</td><td data-label="Level">L4</td><td data-label="Operator">Citra (FK-02)</td></tr>
+              <tr><td data-label="Waktu">10/05 12:35</td><td data-label="Barcode">CS-2026-04701</td><td data-label="SKU">SKU-007 — Nugget Ayam</td><td data-label="Pallet">PLT-2026-0920</td><td data-label="Rack">R-C02</td><td data-label="Level">L1</td><td data-label="Operator">Andi (FK-03)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Putaway Management'); });
+
+function scanBarcode() {
+  const val = document.getElementById('putaway-scan-input').value.trim();
+  if (!val) {
+    document.getElementById('recommendation-box').style.display = 'none';
+    return;
+  }
+  // Show recommendation (dummy)
+  document.getElementById('recommendation-box').style.display = 'block';
+  document.getElementById('assign-success-alert').style.display = 'none';
+}
+
+function assignManual() {
+  const rack = document.getElementById('manual-rack').value;
+  const level = document.getElementById('manual-level').value;
+  if (!rack || !level) {
+    alert('Pilih Rack dan Level terlebih dahulu!');
+    return;
+  }
+  document.getElementById('assign-success-alert').style.display = 'flex';
+  document.getElementById('recommendation-box').style.display = 'none';
+  setTimeout(() => { document.getElementById('assign-success-alert').style.display = 'none'; }, 5000);
+}
+
+// Auto-trigger scan on enter
+document.getElementById('putaway-scan-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); scanBarcode(); }
+});
+</script>
+</body>
+</html>
