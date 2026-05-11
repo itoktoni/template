@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Movement — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-lg font-bold">Movement</h1>
+        <p class="text-sm text-muted-foreground">Pemindahan kemasan antar lokasi rak</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="uk-btn uk-btn-secondary uk-btn-sm"><span class="ri-history-line"></span> History</button>
+        <button class="uk-btn uk-btn-primary uk-btn-sm"><span class="ri-arrow-right-line"></span> New Movement</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div class="uk-card uk-card-body p-3 border">
+        <div class="text-xs text-muted-foreground mb-1">Movement Hari Ini</div>
+        <div class="text-xl font-bold">8</div>
+        <div class="text-xs text-muted-foreground">selesai diproses</div>
+      </div>
+      <div class="uk-card uk-card-body p-3 border">
+        <div class="text-xs text-muted-foreground mb-1">Pending Approval</div>
+        <div class="text-xl font-bold text-amber-600">1</div>
+        <div class="text-xs text-muted-foreground">menunggu supervisor</div>
+      </div>
+      <div class="uk-card uk-card-body p-3 border">
+        <div class="text-xs text-muted-foreground mb-1">Capacity Warning</div>
+        <div class="text-xl font-bold text-red-600">1</div>
+        <div class="text-xs text-muted-foreground">rack hampir penuh</div>
+      </div>
+      <div class="uk-card uk-card-body p-3 border">
+        <div class="text-xs text-muted-foreground mb-1">Total Kemasan Dipindah</div>
+        <div class="text-xl font-bold">8</div>
+        <div class="text-xs text-muted-foreground">kali ini</div>
+      </div>
+    </div>
+
+    <!-- Scan & Source Info -->
+    <div class="uk-card mb-4">
+      <div class="uk-card-header p-3 border-b">
+        <h2 class="text-sm font-semibold">Scan Kemasan / Pallet</h2>
+      </div>
+      <div class="uk-card-body p-3">
+        <div class="erp-form-grid mb-3">
+          <div class="col-span-full sm:col-span-2">
+            <label class="uk-form-label text-xs">Barcode Kemasan atau Pallet ID</label>
+            <input type="text" class="uk-input" placeholder="Scan barcode atau ketik Pallet ID..." id="scanInput" value="KTG-20260510-S01A">
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary" onclick="lookupKemasan()">Lookup</button>
+          </div>
+        </div>
+
+        <!-- Source Location Display -->
+        <div id="sourceInfo" class="border rounded-lg p-3 bg-blue-50 mt-3">
+          <div class="text-xs font-semibold text-blue-700 mb-2"><span class="ri-map-pin-line"></span> Informasi Lokasi Sumber</div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+            <div>
+              <div class="text-muted-foreground">Barcode</div>
+              <div class="font-mono font-semibold">KTG-20260510-S01A</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Rack</div>
+              <div class="font-semibold">Rack A1-03-02</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Level</div>
+              <div class="font-semibold">L2</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Pallet ID</div>
+              <div class="font-mono">PLT-A01-0023</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">SKU</div>
+              <div>Kentang Premium 1kg</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Lot / Exp</div>
+              <div class="font-semibold">LOT-20260418 / 18 Apr 2026</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mt-2 pt-2 border-t">
+            <div>
+              <div class="text-muted-foreground">Qty</div>
+              <div class="font-semibold">2 bungkus</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Berat</div>
+              <div>2,5 kg</div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Status</div>
+              <div><span class="uk-badge">Tersedia</span></div>
+            </div>
+            <div>
+              <div class="text-muted-foreground">Terakhir Dipindah</div>
+              <div>10 Mei 2026 08:30</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Destination & Validation -->
+    <div class="uk-card mb-4">
+      <div class="uk-card-header p-3 border-b">
+        <h2 class="text-sm font-semibold">Tujuan Movement</h2>
+      </div>
+      <div class="uk-card-body p-3">
+        <!-- Reservation Warning -->
+        <div class="erp-alert-warning mb-3">
+          <span class="ri-alert-line"></span>
+          <div>
+            <span class="font-semibold">Peringatan Reservasi:</span> Kemasan KTG-20260510-S01A sedang di-reservasi oleh SO-20260510-001 (Toko Makmur). Movement akan membatalkan reservasi otomatis. Hubungi bagian picking jika tidak yakin.
+          </div>
+        </div>
+
+        <div class="erp-form-grid mb-3">
+          <div>
+            <label class="uk-form-label text-xs">Scan Barcode Rak Tujuan</label>
+            <input type="text" class="uk-input" placeholder="Scan barcode rak tujuan..." id="destScan">
+          </div>
+          <div>
+            <label class="uk-form-label text-xs">Atau Pilih Manual</label>
+            <select class="uk-select" id="destManual">
+              <option value="">Pilih lokasi...</option>
+              <optgroup label="Rack A1">
+                <option>A1-03-01 / L1</option>
+                <option>A1-03-01 / L2</option>
+                <option>A1-03-02 / L1</option>
+                <option>A1-03-02 / L2</option>
+                <option>A1-03-03 / L1</option>
+                <option>A1-03-03 / L2</option>
+              </optgroup>
+              <optgroup label="Rack A2">
+                <option>A2-01-01 / L1</option>
+                <option>A2-01-02 / L1</option>
+              </optgroup>
+              <optgroup label="Staging">
+                <option>Z-A1 (Staging Area A1)</option>
+                <option>Z-B1 (Staging Area B1)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-secondary" onclick="validateDest()">Validasi</button>
+          </div>
+        </div>
+
+        <!-- Capacity Validation -->
+        <div id="capacityResult" class="border rounded-lg p-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <div class="font-semibold mb-1">Preview Destinasi: Rack A1-03-01 / L1</div>
+              <div class="space-y-1">
+                <div class="flex justify-between"><span class="text-muted-foreground">Kapasitas Max:</span><span>10 bungkus</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Sudah Terisi:</span><span>9 bungkus</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Akan Ditambah:</span><span>+2 bungkus</span></div>
+                <div class="flex justify-between font-semibold"><span>Total Setelah:</span><span class="text-red-600">11 bungkus (MELEBIHI!)</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="uk-progress" style="margin:0;">
+                <div class="uk-progress-bar" style="width: 110%; background: #ef4444;">OVER</div>
+              </div>
+              <div class="erp-alert-danger mt-2 text-xs">
+                <span class="ri-error-warning-line"></span>
+                Kapasitas rack tujuan tidak mencukupi! Pilih lokasi lain yang memiliki cukup ruang.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alternative Valid Destination -->
+    <div class="uk-card mb-4">
+      <div class="uk-card-header p-3 border-b">
+        <h2 class="text-sm font-semibold">Lokasi Alternatif (Valid)</h2>
+      </div>
+      <div class="uk-card-body p-3">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-compact erp-table text-sm w-full">
+            <thead>
+              <tr>
+                <th>Lokasi</th>
+                <th>Terisi</th>
+                <th>Kapasitas</th>
+                <th>Sisa</th>
+                <th>Utilisasi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td data-label="Lokasi">A1-03-01 / L2</td><td data-label="Terisi">4 bungkus</td><td data-label="Kapasitas">10 bungkus</td><td data-label="Sisa">6</td><td data-label="Utilisasi">
+                  <div class="uk-progress" style="margin:0; height: 4px;">
+                    <div class="uk-progress-bar" style="width: 40%;"></div>
+                  </div>
+                </td><td data-label="Aksi"><button class="uk-btn uk-btn-primary uk-btn-sm">Pilih</button></td></tr>
+              <tr><td data-label="Lokasi">A1-03-02 / L1</td><td data-label="Terisi">6 bungkus</td><td data-label="Kapasitas">10 bungkus</td><td data-label="Sisa">4</td><td data-label="Utilisasi">
+                  <div class="uk-progress" style="margin:0; height: 4px;">
+                    <div class="uk-progress-bar" style="width: 60%;"></div>
+                  </div>
+                </td><td data-label="Aksi"><button class="uk-btn uk-btn-primary uk-btn-sm">Pilih</button></td></tr>
+              <tr><td data-label="Lokasi">A2-01-01 / L1</td><td data-label="Terisi">2 bungkus</td><td data-label="Kapasitas">10 bungkus</td><td data-label="Sisa">8</td><td data-label="Utilisasi">
+                  <div class="uk-progress" style="margin:0; height: 4px;">
+                    <div class="uk-progress-bar" style="width: 20%;"></div>
+                  </div>
+                </td><td data-label="Aksi"><button class="uk-btn uk-btn-primary uk-btn-sm">Pilih</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation -->
+    <div class="uk-card mb-4">
+      <div class="uk-card-header p-3 border-b">
+        <h2 class="text-sm font-semibold">Konfirmasi Movement</h2>
+      </div>
+      <div class="uk-card-body p-3">
+        <div class="border rounded-lg p-3 mb-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">Kemasan</div>
+              <div class="font-mono font-semibold">KTG-20260510-S01A</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">Dari</div>
+              <div class="font-semibold">Rack A1-03-02 / L2</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted-foreground mb-1">Ke</div>
+              <div class="font-semibold text-green-600">Rack A1-03-01 / L2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="erp-form-grid">
+          <div>
+            <label class="uk-form-label text-xs">Operator</label>
+            <input type="text" class="uk-input uk-form-small" value="Budi Santoso" readonly>
+          </div>
+          <div>
+            <div class="uk-form-label text-xs">Persetujuan Supervisor</div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" class="uk-checkbox" id="supervisorApproval">
+              <label for="supervisorApproval" class="text-xs">Saya supervisor yang bertugas</label>
+            </div>
+          </div>
+          <div>
+            <label class="uk-form-label text-xs">Catatan (opsional)</label>
+            <input type="text" class="uk-input uk-form-small" placeholder="Alasan pemindahan...">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-3">
+          <button class="uk-btn uk-btn-ghost uk-btn-sm">Batal</button>
+          <button class="uk-btn uk-btn-primary uk-btn-sm" onclick="confirmMovement()">
+            <span class="ri-check-line"></span> Konfirmasi Movement
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Movement History -->
+    <div class="uk-card">
+      <div class="uk-card-header p-3 border-b">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">Riwayat Movement Hari Ini</h2>
+          <span class="text-xs text-muted-foreground">10 Mei 2026</span>
+        </div>
+      </div>
+      <div class="uk-card-body p-3">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-compact erp-table text-sm w-full">
+            <thead>
+              <tr>
+                <th>MOV ID</th>
+                <th>Kemasan</th>
+                <th>Dari</th>
+                <th>Ke</th>
+                <th>Operator</th>
+                <th>Supervisor</th>
+                <th>Waktu</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td data-label="Lokasi"><span class="font-mono font-semibold">MOV-001</span></td><td data-label="Terisi"><span class="font-mono">KTG-20260510-S01A</span></td><td data-label="Kapasitas">A1-03-02/L2</td><td data-label="Sisa">A1-03-01/L2</td><td data-label="Utilisasi">Budi S.</td><td data-label="Aksi">Andi K.</td><td data-label="MOV ID">08:15</td><td data-label="Kemasan"><span class="uk-badge">Pending Approval</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-002</span></td><td data-label="Terisi"><span class="font-mono">KWL-20260508-W02</span></td><td data-label="Kapasitas">B2-01-01/L1</td><td data-label="Sisa">A1-04-01/L1</td><td data-label="Utilisasi">Rina M.</td><td data-label="Aksi">Andi K.</td><td data-label="MOV ID">08:45</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-003</span></td><td data-label="Terisi"><span class="font-mono">BME-20260507-B03</span></td><td data-label="Kapasitas">A1-02-01/L3</td><td data-label="Sisa">A1-05-02/L1</td><td data-label="Utilisasi">Budi S.</td><td data-label="Aksi">Sari W.</td><td data-label="MOV ID">09:10</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-004</span></td><td data-label="Terisi"><span class="font-mono">KTG-20260420-K03</span></td><td data-label="Kapasitas">A1-04-01/L1</td><td data-label="Sisa">Z-A1</td><td data-label="Utilisasi">Rina M.</td><td data-label="Aksi">Andi K.</td><td data-label="MOV ID">09:30</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-005</span></td><td data-label="Terisi"><span class="font-mono">WRT-20260506-W01</span></td><td data-label="Kapasitas">C1-01-01/L2</td><td data-label="Sisa">A2-02-01/L1</td><td data-label="Utilisasi">Agus P.</td><td data-label="Aksi">Sari W.</td><td data-label="MOV ID">10:00</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-006</span></td><td data-label="Terisi"><span class="font-mono">KTG-20260415-K01</span></td><td data-label="Kapasitas">A1-03-02/L2</td><td data-label="Sisa">Z-A1</td><td data-label="Utilisasi">Budi S.</td><td data-label="Aksi">Andi K.</td><td data-label="MOV ID">10:20</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-007</span></td><td data-label="Terisi"><span class="font-mono">BME-20260509-B01</span></td><td data-label="Kapasitas">A1-01-03/L1</td><td data-label="Sisa">C2-01-01/L2</td><td data-label="Utilisasi">Agus P.</td><td data-label="Aksi">Sari W.</td><td data-label="MOV ID">11:00</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+              <tr><td data-label="Lokasi"><span class="font-mono">MOV-008</span></td><td data-label="Terisi"><span class="font-mono">KWL-20260510-W01</span></td><td data-label="Kapasitas">B2-01-01/L3</td><td data-label="Sisa">A1-04-02/L2</td><td data-label="Utilisasi">Rina M.</td><td data-label="Aksi">Andi K.</td><td data-label="MOV ID">11:30</td><td data-label="Kemasan"><span class="uk-badge">Selesai</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Movement'); });
+
+function lookupKemasan() {
+  document.getElementById('sourceInfo').style.display = 'block';
+}
+
+function validateDest() {
+  const result = document.getElementById('capacityResult');
+  result.style.display = 'block';
+}
+
+function confirmMovement() {
+  const approved = document.getElementById('supervisorApproval').checked;
+  if (!approved) {
+    alert('Persetujuan supervisor diperlukan!');
+    return;
+  }
+  alert('Movement berhasil dikonfirmasi. Menunggu approval supervisor final.');
+}
+</script>
+</body>
+</html>
