@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://rsms.me/"/>
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
   <link rel="stylesheet" href="assets/erp.css"/>
   <script>document.documentElement.classList.remove('dark');</script>
@@ -38,7 +39,32 @@
     </div>
 
     <!-- Cutting Form -->
-    <div class="uk-card uk-card-default mb-4">
+    
+        <!-- Filter: Status -->
+        <div class="uk-card uk-card-default mb-4" id="filter-card-cutting">
+          <div class="uk-card-body py-3">
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="erp-checkbox-group" id="erp-filter-status">
+                <label class="erp-checkbox-item">
+                  <input type="checkbox" value="draft" checked> Draft
+                </label>
+                <label class="erp-checkbox-item">
+                  <input type="checkbox" value="confirmed" checked> Terkonfirmasi
+                </label>
+                <label class="erp-checkbox-item">
+                  <input type="checkbox" value="cancelled"> Dibatalkan
+                </label>
+              </div>
+              <label class="erp-toggle">
+                <input type="checkbox" id="toggle-active"/>
+                <span class="erp-toggle-track"><span class="erp-toggle-thumb"></span></span>
+                Tampilkan Aktif Saja
+              </label>
+            </div>
+          </div>
+        </div>
+        
+<div class="uk-card uk-card-default mb-4">
       <div class="uk-card-header">
         <h3 class="uk-card-title text-sm font-semibold">Scan & Konfigurasi Potong</h3>
       </div>
@@ -222,11 +248,14 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
 <script src="assets/erp.js"></script>
 <script src="assets/layout.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => { initERPlayout('Cutting Service'); });
+  initTomSelect('#cut-type');
+  
 
 const pkgData = {
   'CS-2026-05110': { sku: 'Daging Sapi Tenderloin', lot: 'LOT-DS-2026-088', exp: '25/05/2026', weight: 5.0 },
