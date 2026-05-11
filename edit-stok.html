@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://rsms.me/"/>
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
   <link rel="stylesheet" href="assets/erp.css"/>
   <script>document.documentElement.classList.remove('dark');</script>
@@ -284,6 +285,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js" ></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
   <script src="assets/erp.js"></script>
   <script src="assets/layout.js"></script>
@@ -291,6 +293,9 @@
     document.addEventListener('DOMContentLoaded', () => {
       initERPlayout('Edit Stok & Berita Acara');
     });
+  initTomSelect('#alasan');
+  initTomSelect('#refOpname');
+  
 
     // Stock data
     const stockData = {
@@ -386,7 +391,9 @@
     document.getElementById('alasan').addEventListener('change', function() {
       const lampiran = document.getElementById('lampiranGroup');
       lampiran.style.display = (this.value === 'kehilangan' || this.value === 'lainnya') ? 'block' : 'none';
-    });
+    
+  initTomSelect('#editSku');
+});
 
     document.getElementById('newQty').addEventListener('input', updatePreview);
     document.getElementById('refOpname').addEventListener('change', updatePreview);
