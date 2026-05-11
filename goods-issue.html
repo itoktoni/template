@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Goods Issue (FEFO) — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="goods-issue.html">Outbound</a></li>
+      <li><span>Goods Issue (FEFO)</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Goods Issue (FEFO)</h1>
+        <p class="text-sm text-muted-foreground">Pick dan issue barang sesuai urutan FEFO (First Expired, First Out)</p>
+      </div>
+    </div>
+
+    <!-- DO & SKU Selector -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Pilih Delivery Order & SKU</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+          <div>
+            <label class="uk-form-label">Delivery Order</label>
+            <select class="uk-select" id="gi-do" onchange="loadFEFOList()">
+              <option value="DO-0045">DO-0045 — PT. Sejahtera Frozen</option>
+              <option value="DO-0044">DO-0044 — CV. Berkah Lautan</option>
+              <option value="DO-0043">DO-0043 — PT. Agro Makmur</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">SKU / Produk</label>
+            <select class="uk-select" id="gi-sku" onchange="loadFEFOList()">
+              <option value="">— Semua SKU —</option>
+              <option value="SKU-001">SKU-001 — Daging Sapi Frozen 1kg</option>
+              <option value="SKU-002">SKU-002 — Ayam Utuh Frozen 1.2kg</option>
+              <option value="SKU-003">SKU-003 — Udang Vannamei 500g</option>
+              <option value="SKU-005">SKU-005 — Ikan Salmon Fillet 400g</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Jumlah Dibutuhkan</label>
+            <input type="number" class="uk-input" value="300" id="gi-qty-needed"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEFO Warning -->
+    <div class="erp-alert-warning mb-4">
+      <span uk-icon="icon: clock; ratio: 0.85"></span>
+      <span class="ml-1 text-sm">
+        <strong>Peringatan FEFO:</strong> 2 batch akan kedaluwarsa dalam 3 hari ke depan!
+        Harus diprioritaskan untuk pengambilan terlebih dahulu.
+      </span>
+    </div>
+
+    <!-- FEFO Sorted Package List -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Daftar Kemasan — Urutan FEFO</h3>
+        <span class="uk-badge">12 Kemasan</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Barcode</th>
+                <th>SKU</th>
+                <th>Exp Date</th>
+                <th>Qty</th>
+                <th>Rack + Level</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#fef3c7;">
+                <td data-label="Barcode" class="text-xs font-semibold">1</td>
+                <td data-label="Barcode" class="font-mono text-xs">CS-2026-04401</td>
+                <td data-label="Barcode">SKU-003 — Udang Vannamei</td>
+                <td data-label="Barcode" class="font-bold" style="color:#92400e;">11/05/2026</td>
+                <td data-label="Barcode">40 ktn</td>
+                <td data-label="Barcode">R-A02 / L3</td>
+                <td data-label="Barcode"><span class="uk-badge" style="background:#fbbf24;color:#92400e;">⚠ Exp 1 hari</span></td>
+              </tr>
+              <tr style="background:#fef3c7;">
+                <td data-label="Barcode" class="text-xs font-semibold">2</td>
+                <td data-label="Barcode" class="font-mono text-xs">CS-2026-04415</td>
+                <td data-label="Barcode">SKU-005 — Salmon Fillet</td>
+                <td data-label="Barcode" class="font-bold" style="color:#92400e;">12/05/2026</td>
+                <td data-label="Barcode">25 ktn</td>
+                <td data-label="Barcode">R-A03 / L4</td>
+                <td data-label="Barcode"><span class="uk-badge" style="background:#fbbf24;color:#92400e;">⚠ Exp 2 hari</span></td>
+              </tr>
+              <tr style="background:#fef3c7;">
+                <td data-label="Barcode" class="text-xs font-semibold">3</td>
+                <td data-label="Barcode" class="font-mono text-xs">CS-2026-04489</td>
+                <td data-label="Barcode">SKU-003 — Udang Vannamei</td>
+                <td data-label="Barcode" class="font-bold" style="color:#92400e;">12/05/2026</td>
+                <td data-label="Barcode">60 ktn</td>
+                <td data-label="Barcode">R-A03 / L2</td>
+                <td data-label="Barcode"><span class="uk-badge" style="background:#fbbf24;color:#92400e;">⚠ Exp 2 hari</span></td>
+              </tr>
+              <tr><td data-label="#">4</td><td data-label="Barcode">CS-2026-04501</td><td data-label="SKU">SKU-001 — Daging Sapi</td><td data-label="Exp Date">18/05/2026</td><td data-label="Qty">50 ktn</td><td data-label="Rack + Level">R-B02 / L3</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">5</td><td data-label="Barcode">CS-2026-04518</td><td data-label="SKU">SKU-003 — Udang Vannamei</td><td data-label="Exp Date">20/05/2026</td><td data-label="Qty">45 ktn</td><td data-label="Rack + Level">R-B01 / L1</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">6</td><td data-label="Barcode">CS-2026-04521</td><td data-label="SKU">SKU-001 — Daging Sapi</td><td data-label="Exp Date">22/05/2026</td><td data-label="Qty">35 ktn</td><td data-label="Rack + Level">R-C01 / L4</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">7</td><td data-label="Barcode">CS-2026-04535</td><td data-label="SKU">SKU-002 — Ayam Utuh</td><td data-label="Exp Date">25/05/2026</td><td data-label="Qty">55 ktn</td><td data-label="Rack + Level">R-A02 / L2</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">8</td><td data-label="Barcode">CS-2026-04549</td><td data-label="SKU">SKU-005 — Salmon Fillet</td><td data-label="Exp Date">28/05/2026</td><td data-label="Qty">30 ktn</td><td data-label="Rack + Level">R-B03 / L2</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">9</td><td data-label="Barcode">CS-2026-04560</td><td data-label="SKU">SKU-001 — Daging Sapi</td><td data-label="Exp Date">01/06/2026</td><td data-label="Qty">40 ktn</td><td data-label="Rack + Level">R-B02 / L2</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">10</td><td data-label="Barcode">CS-2026-04573</td><td data-label="SKU">SKU-002 — Ayam Utuh</td><td data-label="Exp Date">05/06/2026</td><td data-label="Qty">35 ktn</td><td data-label="Rack + Level">R-C02 / L2</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">11</td><td data-label="Barcode">CS-2026-04588</td><td data-label="SKU">SKU-003 — Udang Vannamei</td><td data-label="Exp Date">10/06/2026</td><td data-label="Qty">50 ktn</td><td data-label="Rack + Level">R-B01 / L4</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+              <tr><td data-label="#">12</td><td data-label="Barcode">CS-2026-04601</td><td data-label="SKU">SKU-005 — Salmon Fillet</td><td data-label="Exp Date">15/06/2026</td><td data-label="Qty">20 ktn</td><td data-label="Rack + Level">R-C01 / L2</td><td data-label="Status"><span class="uk-badge">Tersedia</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Picking Confirmation -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Konfirmasi Picking — Scan Barcode</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: 1fr auto;">
+          <div>
+            <label class="uk-form-label">Scan Barcode Kemasan</label>
+            <input type="text" class="uk-input uk-form-large font-mono" placeholder="Pindai barcode kemasan yang akan di-issue..." id="gi-scan-input"/>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary" onclick="validateIssueScan()">
+              <span uk-icon="icon: check; ratio: 0.8"></span> Validasi
+            </button>
+          </div>
+        </div>
+
+        <!-- Scan Alerts -->
+        <div class="erp-alert-warning mb-3 mt-3" id="gi-scan-wrong" style="display:none;">
+          <span uk-icon="icon: warning; ratio: 0.9"></span>
+          <span class="ml-2 text-sm">
+            <strong>Peringatan — Kemasan Salah!</strong> Barcode yang dipindai bukan kemasan prioritas FEFO.
+            Kemasan dengan exp date lebih awal masih ada di rack lain. Scan yang benar atau hubungi supervisor.
+          </span>
+        </div>
+
+        <div class="erp-alert-success mb-3 mt-3" id="gi-scan-success" style="display:none;">
+          <span uk-icon="icon: check-circle; ratio: 0.9"></span>
+          <span class="ml-2 text-sm">
+            <strong>Picking Tervalidasi!</strong> Kemasan sesuai urutan FEFO. Goods issue diproses.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Ringkasan Goods Issue — DO-0045</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="erp-card-compact border border-gray-200 rounded-lg text-center">
+            <div class="text-xs text-muted-foreground mb-1">Total Dibutuhkan</div>
+            <div class="text-2xl font-bold">300</div>
+            <div class="text-xs text-muted-foreground">ktn</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg text-center" style="border-color:#22c55e;">
+            <div class="text-xs text-muted-foreground mb-1">Sudah Dipick</div>
+            <div class="text-2xl font-bold" style="color:#16a34a;">125</div>
+            <div class="text-xs text-muted-foreground">ktn</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg text-center">
+            <div class="text-xs text-muted-foreground mb-1">Sisa</div>
+            <div class="text-2xl font-bold">175</div>
+            <div class="text-xs text-muted-foreground">ktn</div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-xs text-muted-foreground">Progress Picking</span>
+            <span class="text-xs font-semibold">125 / 300 ktn (42%)</span>
+          </div>
+          <uk-progress value="125" max="300"></uk-progress>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button class="uk-btn uk-btn-primary">
+            <span uk-icon="icon: printer; ratio: 0.8"></span> Cetak Goods Issue Note
+          </button>
+          <button class="uk-btn uk-btn-ghost">Kirim ke Loading Dock</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Goods Issue (FEFO)'); });
+
+// Dummy FEFO data
+const fefoPackages = [
+  'CS-2026-04401', // Exp 11/05 - highest priority
+  'CS-2026-04415', // Exp 12/05
+  'CS-2026-04489', // Exp 12/05
+  'CS-2026-04501', // Exp 18/05
+  'CS-2026-04518', // Exp 20/05
+  'CS-2026-04521', // Exp 22/05
+  'CS-2026-04535', // Exp 25/05
+  'CS-2026-04549', // Exp 28/05
+  'CS-2026-04560', // Exp 01/06
+  'CS-2026-04573', // Exp 05/06
+  'CS-2026-04588', // Exp 10/06
+  'CS-2026-04601', // Exp 15/06
+];
+
+function loadFEFOList() {
+  const doVal = document.getElementById('gi-do').value;
+  // Reload FEFO list (dummy)
+}
+
+function validateIssueScan() {
+  const input = document.getElementById('gi-scan-input').value.trim();
+  document.getElementById('gi-scan-wrong').style.display = 'none';
+  document.getElementById('gi-scan-success').style.display = 'none';
+  
+  if (!input) return;
+
+  if (fefoPackages.includes(input)) {
+    // Check if it's the first unpicked package (FEFO order)
+    // For demo: first 3 are "not picked yet"
+    document.getElementById('gi-scan-success').style.display = 'flex';
+  } else {
+    document.getElementById('gi-scan-wrong').style.display = 'flex';
+  }
+}
+
+// Enter key to validate
+document.getElementById('gi-scan-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); validateIssueScan(); }
+});
+</script>
+</body>
+</html>
