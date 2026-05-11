@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Rack Management — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="rack.html">Operations</a></li>
+      <li><span>Rack Management</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Rack Management</h1>
+        <p class="text-sm text-muted-foreground">Monitoring dan manajemen rak gudang 4-level</p>
+      </div>
+      <button class="uk-btn uk-btn-primary uk-btn-sm" onclick="UIkit.modal('#modal-add-rack').show()">
+        <span uk-icon="icon: plus; ratio: 0.7"></span> Tambah Rack
+      </button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Total Rack</div>
+        <div class="erp-stat-value">8</div>
+        <div class="text-xs text-muted-foreground">32 level total</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Terisi</div>
+        <div class="erp-stat-value text-primary">72%</div>
+        <div class="text-xs text-muted-foreground">23 / 32 level</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Peringatan</div>
+        <div class="erp-stat-value" style="color:#d97706;">2</div>
+        <div class="text-xs text-muted-foreground">Rack B &amp; F ≥ 90%</div>
+      </div>
+      <div class="uk-card uk-card-default erp-card-compact">
+        <div class="erp-stat-label">Kosong</div>
+        <div class="erp-stat-value text-muted-foreground">4</div>
+        <div class="text-xs text-muted-foreground">Siap digunakan</div>
+      </div>
+    </div>
+
+    <!-- Capacity Warning Alert -->
+    <div class="erp-alert-warning mb-4">
+      <span uk-icon="icon: warning; ratio: 0.8"></span>
+      <span class="text-sm ml-2"><strong>Peringatan Kapasitas:</strong> Rack B (92%) dan Rack F (90%) mendekati kapasitas maksimum. Segera lakukan relokasi atau pemuatan ulang.</span>
+    </div>
+
+    <!-- Visual Rack Map -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Peta Rak Gudang — Zone A</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <!-- Rack A -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center uk-badge uk-badge-primary">Rack A — 75%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full" onclick="showRackDetail('A','4','PLT-A04-001','SKU-001','Daging Sapi','10/08/2026','48')" style="cursor:pointer;">PLT-A04</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('A','3','PLT-A03-001','SKU-001','Daging Sapi','10/07/2026','48')" style="cursor:pointer;">PLT-A03</div>
+              <div class="erp-rack-level partial" onclick="showRackDetail('A','2','PLT-A02-001','SKU-003','Udang Vannamei','08/06/2026','32')" style="cursor:pointer;">PLT-A02</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('A','1','','','','','')" style="cursor:pointer;">Kosong</div>
+            </div>
+          </div>
+          <!-- Rack B -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center" style="background:#fef3c7;color:#92400e;border-radius:999px;padding:.125rem .5rem;">Rack B — 92%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full" onclick="showRackDetail('B','4','PLT-B04-001','SKU-002','Ayam Utuh','12/09/2026','48')" style="cursor:pointer;">PLT-B04</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('B','3','PLT-B03-001','SKU-002','Ayam Utuh','12/08/2026','48')" style="cursor:pointer;">PLT-B03</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('B','2','PLT-B02-001','SKU-007','Nugget Ayam','06/05/2026','40')" style="cursor:pointer;">PLT-B02</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('B','1','PLT-B01-001','SKU-007','Nugget Ayam','06/04/2026','40')" style="cursor:pointer;">PLT-B01</div>
+            </div>
+          </div>
+          <!-- Rack C -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center uk-badge uk-badge-primary">Rack C — 50%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full" onclick="showRackDetail('C','4','PLT-C04-001','SKU-005','Salmon Fillet','09/07/2026','40')" style="cursor:pointer;">PLT-C04</div>
+              <div class="erp-rack-level partial" onclick="showRackDetail('C','3','PLT-C03-001','SKU-005','Salmon Fillet','09/06/2026','20')" style="cursor:pointer;">PLT-C03</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('C','2','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('C','1','','','','','')" style="cursor:pointer;">Kosong</div>
+            </div>
+          </div>
+          <!-- Rack D -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center uk-badge">Rack D — 50%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level partial" onclick="showRackDetail('D','4','PLT-D04-001','SKU-004','Sayur Campur','05/05/2026','24')" style="cursor:pointer;">PLT-D04</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('D','3','PLT-D03-001','SKU-004','Sayur Campur','05/04/2026','48')" style="cursor:pointer;">PLT-D03</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('D','2','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('D','1','','','','','')" style="cursor:pointer;">Kosong</div>
+            </div>
+          </div>
+          <!-- Rack E -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center uk-badge uk-badge-primary">Rack E — 75%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full" onclick="showRackDetail('E','4','PLT-E04-001','SKU-006','Kentang Fries','11/10/2026','48')" style="cursor:pointer;">PLT-E04</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('E','3','PLT-E03-001','SKU-006','Kentang Fries','11/09/2026','48')" style="cursor:pointer;">PLT-E03</div>
+              <div class="erp-rack-level partial" onclick="showRackDetail('E','2','PLT-E02-001','SKU-006','Kentang Fries','11/08/2026','16')" style="cursor:pointer;">PLT-E02</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('E','1','','','','','')" style="cursor:pointer;">Kosong</div>
+            </div>
+          </div>
+          <!-- Rack F -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center" style="background:#fef3c7;color:#92400e;border-radius:999px;padding:.125rem .5rem;">Rack F — 90%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level full" onclick="showRackDetail('F','4','PLT-F04-001','SKU-001','Daging Sapi','10/10/2026','48')" style="cursor:pointer;">PLT-F04</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('F','3','PLT-F03-001','SKU-003','Udang Vannamei','08/08/2026','48')" style="cursor:pointer;">PLT-F03</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('F','2','PLT-F02-001','SKU-003','Udang Vannamei','08/07/2026','40')" style="cursor:pointer;">PLT-F02</div>
+              <div class="erp-rack-level full" onclick="showRackDetail('F','1','PLT-F01-001','SKU-001','Daging Sapi','10/09/2026','40')" style="cursor:pointer;">PLT-F01</div>
+            </div>
+          </div>
+          <!-- Rack G -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center uk-badge">Rack G — 25%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level partial" onclick="showRackDetail('G','4','PLT-G04-001','SKU-007','Nugget Ayam','06/06/2026','12')" style="cursor:pointer;">PLT-G04</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('G','3','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('G','2','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('G','1','','','','','')" style="cursor:pointer;">Kosong</div>
+            </div>
+          </div>
+          <!-- Rack H -->
+          <div>
+            <div class="text-xs font-semibold mb-2 text-center uk-badge">Rack H — 0%</div>
+            <div class="erp-rack">
+              <div class="erp-rack-level empty" onclick="showRackDetail('H','4','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('H','3','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('H','2','','','','','')" style="cursor:pointer;">Kosong</div>
+              <div class="erp-rack-level empty" onclick="showRackDetail('H','1','','','','','')" style="cursor:pointer;">Kosong</div>
+            </div>
+          </div>
+        </div>
+        <!-- Legend -->
+        <div class="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#fee2e2;"></span> Full (80-100%)</span>
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#fef3c7;"></span> Partial (1-79%)</span>
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--muted);"></span> Kosong (0%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rack Overview Table -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Rack Overview</h3>
+        <span class="uk-badge uk-badge-primary">8 Rack</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="erp-table-wrap">
+          <table class="uk-table uk-table-divider uk-table-striped uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Rack</th>
+                <th class="text-center">L1</th>
+                <th class="text-center">L2</th>
+                <th class="text-center">L3</th>
+                <th class="text-center">L4</th>
+                <th class="text-center">Total Pallet</th>
+                <th class="text-center">Kapasitas</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td data-label="Rack">A</td><td data-label="L1">—</td><td data-label="L2">PLT-A02</td><td data-label="L3">PLT-A03</td><td data-label="L4">PLT-A04</td><td data-label="Total Pallet">3</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:75%;background:#2563eb;"></div></div></td><td data-label="Status"><span class="uk-badge uk-badge-primary">75%</span></td></tr>
+              <tr><td data-label="Rack">B</td><td data-label="L1">PLT-B01</td><td data-label="L2">PLT-B02</td><td data-label="L3">PLT-B03</td><td data-label="L4">PLT-B04</td><td data-label="Total Pallet">4</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:92%;background:#d97706;"></div></div></td><td data-label="Status"><span class="erp-alert-warning text-xs" style="padding:.125rem .375rem;">⚠ 92%</span></td></tr>
+              <tr><td data-label="Rack">C</td><td data-label="L1">—</td><td data-label="L2">—</td><td data-label="L3">PLT-C03</td><td data-label="L4">PLT-C04</td><td data-label="Total Pallet">2</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:50%;background:#2563eb;"></div></div></td><td data-label="Status"><span class="uk-badge uk-badge-primary">50%</span></td></tr>
+              <tr><td data-label="Rack">D</td><td data-label="L1">—</td><td data-label="L2">—</td><td data-label="L3">PLT-D03</td><td data-label="L4">PLT-D04</td><td data-label="Total Pallet">2</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:50%;background:#2563eb;"></div></div></td><td data-label="Status"><span class="uk-badge uk-badge-primary">50%</span></td></tr>
+              <tr><td data-label="Rack">E</td><td data-label="L1">—</td><td data-label="L2">PLT-E02</td><td data-label="L3">PLT-E03</td><td data-label="L4">PLT-E04</td><td data-label="Total Pallet">3</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:75%;background:#2563eb;"></div></div></td><td data-label="Status"><span class="uk-badge uk-badge-primary">75%</span></td></tr>
+              <tr><td data-label="Rack">F</td><td data-label="L1">PLT-F01</td><td data-label="L2">PLT-F02</td><td data-label="L3">PLT-F03</td><td data-label="L4">PLT-F04</td><td data-label="Total Pallet">4</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:90%;background:#d97706;"></div></div></td><td data-label="Status"><span class="erp-alert-warning text-xs" style="padding:.125rem .375rem;">⚠ 90%</span></td></tr>
+              <tr><td data-label="Rack">G</td><td data-label="L1">—</td><td data-label="L2">—</td><td data-label="L3">—</td><td data-label="L4">PLT-G04</td><td data-label="Total Pallet">1</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:25%;background:#2563eb;"></div></div></td><td data-label="Status"><span class="uk-badge">25%</span></td></tr>
+              <tr><td data-label="Rack">H</td><td data-label="L1">—</td><td data-label="L2">—</td><td data-label="L3">—</td><td data-label="L4">—</td><td data-label="Total Pallet">0</td><td data-label="Kapasitas"><div class="uk-progress" style="height:6px;margin:0;width:80px;"><div class="uk-progress-bar" style="width:0%;background:#2563eb;"></div></div></td><td data-label="Status"><span class="uk-badge">Kosong</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Rack Detail Modal -->
+<div id="modal-rack-detail" uk-modal>
+  <div class="uk-modal-dialog uk-modal-container">
+    <div class="uk-modal-header flex items-center justify-between">
+      <h3 class="text-sm font-semibold" id="rack-detail-title">Detail Rack — A Level 4</h3>
+      <button class="uk-modal-close-default" type="button" uk-close></button>
+    </div>
+    <div class="uk-modal-body">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="erp-section-gap">
+          <div class="text-xs text-muted-foreground">Pallet ID</div>
+          <div class="text-sm font-semibold" id="rack-detail-pallet">—</div>
+          <div class="text-xs text-muted-foreground mt-2">SKU / Produk</div>
+          <div class="text-sm font-semibold" id="rack-detail-sku">—</div>
+          <div class="text-xs text-muted-foreground mt-2">Nama Produk</div>
+          <div class="text-sm" id="rack-detail-name">—</div>
+        </div>
+        <div class="erp-section-gap">
+          <div class="text-xs text-muted-foreground">Tanggal Expired</div>
+          <div class="text-sm font-semibold" id="rack-detail-exp">—</div>
+          <div class="text-xs text-muted-foreground mt-2">Quantity (Karton)</div>
+          <div class="text-sm font-semibold" id="rack-detail-qty">—</div>
+          <div class="text-xs text-muted-foreground mt-2">Status Level</div>
+          <div id="rack-detail-status">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="uk-modal-footer flex gap-2">
+      <button class="uk-btn uk-btn-primary uk-btn-sm">Relokasi Pallet</button>
+      <button class="uk-btn uk-btn-ghost uk-btn-sm uk-modal-close">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Rack Management'); });
+
+function showRackDetail(rack, level, pallet, sku, name, exp, qty) {
+  document.getElementById('rack-detail-title').textContent = 'Detail — Rack ' + rack + ' Level ' + level;
+  document.getElementById('rack-detail-pallet').textContent = pallet || '—';
+  document.getElementById('rack-detail-sku').textContent = sku || '—';
+  document.getElementById('rack-detail-name').textContent = name || '—';
+  document.getElementById('rack-detail-exp').textContent = exp || '—';
+  document.getElementById('rack-detail-qty').textContent = qty ? qty + ' ktn' : '—';
+
+  let statusHtml = '';
+  if (!pallet) {
+    statusHtml = '<span class="uk-badge" style="background:#f4f4f5;color:#71717a;">Kosong</span>';
+  } else if (parseInt(qty) >= 40) {
+    statusHtml = '<span class="uk-badge uk-badge-destructive">Full</span>';
+  } else {
+    statusHtml = '<span class="uk-badge uk-badge-primary">Partial</span>';
+  }
+  document.getElementById('rack-detail-status').innerHTML = statusHtml;
+  UIkit.modal('#modal-rack-detail').show();
+}
+</script>
+</body>
+</html>
