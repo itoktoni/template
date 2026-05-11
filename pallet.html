@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pallet Management — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="pallet.html">Inventory</a></li>
+      <li><span>Pallet Management</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Pallet Management</h1>
+        <p class="text-sm text-muted-foreground">Kelola pallet — pencarian, detail lokasi, dan status isi</p>
+      </div>
+      <div class="flex gap-2">
+        <span class="uk-badge uk-badge-primary">8 Pallet Aktif</span>
+        <span class="uk-badge">2 Pallet Kosong</span>
+      </div>
+    </div>
+
+    <!-- Search / Scan -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Cari / Scan Pallet</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: 1fr auto;">
+          <div>
+            <label class="uk-form-label">Pallet ID</label>
+            <input type="text" class="uk-input uk-form-large font-mono" placeholder="Masukkan atau scan Pallet ID..." id="pallet-search" onchange="loadPalletDetail()"/>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary" onclick="loadPalletDetail()">
+              <span uk-icon="icon: search; ratio: 0.8"></span> Cari
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pallet Detail Card -->
+    <div class="uk-card uk-card-default mb-4" id="pallet-detail-card" style="display:none;">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold" id="pallet-detail-title">Detail Pallet</h3>
+        <span class="uk-badge" id="pallet-detail-badge">Aktif</span>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Pallet ID</div>
+            <div class="text-sm font-bold font-mono" id="pd-id"></div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Lokasi (Rack-Level)</div>
+            <div class="text-sm font-bold" id="pd-location"></div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Status</div>
+            <div class="text-sm font-bold" id="pd-status"></div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Jumlah Kemasan</div>
+            <div class="text-sm font-bold" id="pd-qty"></div>
+          </div>
+        </div>
+
+        <!-- Mixed SKU Warning -->
+        <div class="erp-alert-warning mb-4" id="pd-mixed-alert" style="display:none;">
+          <span uk-icon="icon: warning; ratio: 0.85"></span>
+          <span class="ml-1 text-sm">
+            <strong>Campuran SKU!</strong> Pallet ini berisi <strong id="pd-sku-count">2</strong> SKU berbeda.
+            Mohon konfirmasi atau pindahkan ke lokasi terpisah sesuai prosedur FIFO.
+          </span>
+        </div>
+
+        <!-- Contents Table -->
+        <div class="text-sm font-semibold mb-2">Isi Pallet:</div>
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Barcode</th>
+                <th>SKU</th>
+                <th>Lot</th>
+                <th>Exp Date</th>
+                <th>Qty (ktn)</th>
+                <th>Berat (kg)</th>
+              </tr>
+            </thead>
+            <tbody id="pd-contents">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pallet List Table -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Daftar Semua Pallet</h3>
+        <span class="text-xs text-muted-foreground">10 pallet tercatat</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Pallet ID</th>
+                <th>Lokasi</th>
+                <th>Jumlah Kemasan</th>
+                <th>SKU(s)</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="pallet-list-body">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty Pallets -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Pallet Kosong Tersedia</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="empty-pallets-grid">
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold">10</div>
+          <div class="text-xs text-muted-foreground">Total Pallet</div>
+        </div>
+      </div>
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold" style="color:var(--primary);">8</div>
+          <div class="text-xs text-muted-foreground">Pallet Aktif</div>
+        </div>
+      </div>
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold" style="color:#999;">2</div>
+          <div class="text-xs text-muted-foreground">Pallet Kosong</div>
+        </div>
+      </div>
+      <div class="uk-card uk-card-default">
+        <div class="uk-card-body text-center">
+          <div class="text-2xl font-bold" style="color:#b45309;">1</div>
+          <div class="text-xs text-muted-foreground">Campuran SKU</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Pallet Management'); renderPalletList(); renderEmptyPallets(); });
+
+const pallets = {
+  'PLT-2026-0001': { location: 'R-A01 / L1', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05001', sku: 'Daging Sapi Tenderloin 1kg', lot: 'LOT-DS-2026-088', exp: '25/05/2026', qty: 6, weight: 6.0 },
+    { barcode: 'CS-2026-05002', sku: 'Daging Sapi Tenderloin 1kg', lot: 'LOT-DS-2026-088', exp: '25/05/2026', qty: 6, weight: 6.0 }
+  ]},
+  'PLT-2026-0002': { location: 'R-A01 / L2', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05010', sku: 'Ayam Utuh Frozen 1.2kg', lot: 'LOT-AU-2026-055', exp: '20/05/2026', qty: 10, weight: 12.0 },
+    { barcode: 'CS-2026-05011', sku: 'Ayam Utuh Frozen 1.2kg', lot: 'LOT-AU-2026-055', exp: '20/05/2026', qty: 5, weight: 6.0 }
+  ]},
+  'PLT-2026-0003': { location: 'R-A02 / L1', status: 'Aktif', mixed: true, contents: [
+    { barcode: 'CS-2026-05020', sku: 'Udang Vannamei 500g', lot: 'LOT-UV-2026-041', exp: '18/05/2026', qty: 8, weight: 4.0 },
+    { barcode: 'CS-2026-05021', sku: 'Ikan Salmon Fillet 400g', lot: 'LOT-IS-2026-033', exp: '22/05/2026', qty: 6, weight: 2.4 }
+  ]},
+  'PLT-2026-0004': { location: 'R-A02 / L3', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05030', sku: 'Daging Ayam Paha 800g', lot: 'LOT-AP-2026-062', exp: '15/05/2026', qty: 12, weight: 9.6 }
+  ]},
+  'PLT-2026-0005': { location: 'R-A03 / L1', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05040', sku: 'Daging Babi Samcan 1kg', lot: 'LOT-BS-2026-048', exp: '28/05/2026', qty: 8, weight: 8.0 }
+  ]},
+  'PLT-2026-0006': { location: 'R-B01 / L2', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05050', sku: 'Ikan Tuna Loin 2kg', lot: 'LOT-IT-2026-044', exp: '16/05/2026', qty: 4, weight: 8.0 },
+    { barcode: 'CS-2026-05051', sku: 'Ikan Tuna Loin 2kg', lot: 'LOT-IT-2026-045', exp: '17/05/2026', qty: 3, weight: 6.0 }
+  ]},
+  'PLT-2026-0007': { location: 'R-B01 / L3', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05060', sku: 'Daging Sapi Sirloin 1kg', lot: 'LOT-DS-2026-091', exp: '30/05/2026', qty: 10, weight: 10.0 }
+  ]},
+  'PLT-2026-0008': { location: 'R-C01 / L1', status: 'Aktif', contents: [
+    { barcode: 'CS-2026-05070', sku: 'Kentang Premium 10kg', lot: 'LOT-KT-2026-042', exp: '22/05/2026', qty: 3, weight: 30.0 }
+  ]},
+  'PLT-2026-0009': { location: 'R-C02 / L1', status: 'Kosong', contents: [] },
+  'PLT-2026-0010': { location: 'R-C02 / L2', status: 'Kosong', contents: [] }
+};
+
+function loadPalletDetail() {
+  const id = document.getElementById('pallet-search').value.trim();
+  const card = document.getElementById('pallet-detail-card');
+  const p = pallets[id];
+
+  if (!p) {
+    card.style.display = 'none';
+    return;
+  }
+
+  document.getElementById('pd-id').textContent = id;
+  document.getElementById('pd-location').textContent = p.location;
+  document.getElementById('pd-status').textContent = p.status;
+  document.getElementById('pd-qty').textContent = p.contents.length + ' kemasan';
+
+  // Badge
+  const badge = document.getElementById('pallet-detail-badge');
+  if (p.status === 'Kosong') {
+    badge.className = 'uk-badge';
+    badge.textContent = 'Kosong';
+  } else {
+    badge.className = 'uk-badge uk-badge-primary';
+    badge.textContent = 'Aktif';
+  }
+
+  // Mixed alert
+  const mixedAlert = document.getElementById('pd-mixed-alert');
+  if (p.mixed) {
+    const skus = [...new Set(p.contents.map(c => c.sku))];
+    document.getElementById('pd-sku-count').textContent = skus.length;
+    mixedAlert.style.display = 'flex';
+  } else {
+    mixedAlert.style.display = 'none';
+  }
+
+  // Contents table
+  const tbody = document.getElementById('pd-contents');
+  tbody.innerHTML = '';
+  if (p.contents.length === 0) {
+    tbody.innerHTML = '<tr><td data-label="Kosong" colspan="6" class="text-center text-sm text-muted-foreground py-4">Pallet kosong</td></tr>';
+  } else {
+    p.contents.forEach(c => {
+      tbody.innerHTML += `
+        <tr>
+          <td data-label="Barcode" class="font-mono text-xs">${c.barcode}</td>
+          <td data-label="SKU">${c.sku}</td>
+          <td data-label="Lot" class="font-mono text-xs">${c.lot}</td>
+          <td data-label="Exp Date">${c.exp}</td>
+          <td data-label="Qty (ktn)" class="font-bold">${c.qty}</td>
+          <td data-label="Berat (kg)">${c.weight} kg</td>
+        </tr>`;
+    });
+  }
+
+  card.style.display = 'block';
+}
+
+function renderPalletList() {
+  const tbody = document.getElementById('pallet-list-body');
+  tbody.innerHTML = '';
+
+  Object.entries(pallets).forEach(([id, p]) => {
+    const totalKemasan = p.contents.length;
+    const skus = [...new Set(p.contents.map(c => c.sku))];
+    const skuText = skus.length > 0 ? skus.join(', ') : '—';
+    const isMixed = skus.length > 1;
+
+    let statusBadge = '';
+    if (p.status === 'Kosong') {
+      statusBadge = '<span class="uk-badge">Kosong</span>';
+    } else if (isMixed) {
+      statusBadge = '<span class="uk-badge" style="background:#fef3c7;color:#b45309;">Campuran SKU</span>';
+    } else {
+      statusBadge = '<span class="uk-badge uk-badge-primary">Aktif</span>';
+    }
+
+    tbody.innerHTML += `
+      <tr${isMixed ? ' style="background:#fffbeb;"' : ''}>
+        <td data-label="Pallet ID" class="font-mono text-xs">${id}</td>
+        <td data-label="Lokasi">${p.location}</td>
+        <td data-label="Total" class="font-bold">${totalKemasan}</td>
+        <td data-label="SKU" class="text-xs" style="${isMixed ? 'color:#b45309;font-weight:600;' : ''}">${skuText}</td>
+        <td data-label="Status">${statusBadge}</td>
+        <td data-label="Aksi"><button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="viewPallet('${id}')">Detail</button></td>
+      </tr>`;
+  });
+}
+
+function renderEmptyPallets() {
+  const grid = document.getElementById('empty-pallets-grid');
+  grid.innerHTML = '';
+
+  Object.entries(pallets).forEach(([id, p]) => {
+    if (p.status !== 'Kosong') return;
+    grid.innerHTML += `
+      <div class="erp-card-compact border border-dashed border-gray-300 rounded-lg p-4 text-center" style="background:#fafafa;">
+        <div class="font-mono text-sm font-bold mb-1">${id}</div>
+        <div class="text-xs text-muted-foreground mb-2">${p.location}</div>
+        <span class="uk-badge">Kosong — Tersedia</span>
+        <div class="mt-2">
+          <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="viewPallet('${id}')">Lihat Detail</button>
+        </div>
+      </div>`;
+  });
+}
+
+function viewPallet(id) {
+  document.getElementById('pallet-search').value = id;
+  loadPalletDetail();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
