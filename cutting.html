@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Cutting Service — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="cutting.html">Processing</a></li>
+      <li><span>Cutting Service</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Cutting Service</h1>
+        <p class="text-sm text-muted-foreground">Proses pemotongan daging — premium, biasa, atau grinding</p>
+      </div>
+      <div class="flex gap-2">
+        <span class="uk-badge uk-badge-primary">1 Operasi Aktif</span>
+        <span class="uk-badge">5 Cut Hari Ini</span>
+      </div>
+    </div>
+
+    <!-- Cutting Form -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Scan & Konfigurasi Potong</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <div>
+            <label class="uk-form-label">Scan Barcode Paket Sumber</label>
+            <input type="text" class="uk-input uk-form-large font-mono" placeholder="Arahkan scanner..." id="scan-source" autofocus onchange="loadSourcePkg()"/>
+          </div>
+          <div>
+            <label class="uk-form-label">Jenis Potong</label>
+            <select class="uk-select" id="cut-type" onchange="updateCutType()">
+              <option value="">— Pilih —</option>
+              <option value="premium">Potong Premium (Iris Tipis)</option>
+              <option value="biasa">Potong Biasa (Blok)</option>
+              <option value="grinding">Grinding (Giling)</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Target Berat (kg)</label>
+            <input type="number" class="uk-input" id="target-weight" placeholder="0.00" step="0.1" min="0" onchange="validateWeight()"/>
+          </div>
+          <div class="flex items-end">
+            <button class="uk-btn uk-btn-primary" id="btn-cut" onclick="startCutting()" disabled>
+              <span uk-icon="icon: scissors; ratio: 0.8"></span> Mulai Potong
+            </button>
+          </div>
+        </div>
+
+        <!-- Source Package Info -->
+        <div id="source-info" style="display:none;" class="mt-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Barcode Sumber</div>
+              <div class="text-sm font-bold font-mono" id="src-barcode"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">SKU</div>
+              <div class="text-sm font-bold" id="src-sku"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Lot</div>
+              <div class="text-sm font-bold font-mono" id="src-lot"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Exp Date</div>
+              <div class="text-sm font-bold" id="src-exp"></div>
+            </div>
+            <div class="erp-card-compact border border-gray-200 rounded-lg">
+              <div class="text-xs text-muted-foreground mb-1">Berat Tersedia</div>
+              <div class="text-sm font-bold" id="src-weight" style="color:var(--primary);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weight Warning -->
+        <div class="erp-alert-danger mt-3" id="weight-warning" style="display:none;">
+          <span uk-icon="icon: warning; ratio: 0.9"></span>
+          <span class="ml-2 text-sm">
+            <strong>Peringatan!</strong> Berat yang diminta (<span id="warn-req-weight"></span> kg) melebihi berat tersedia (<span id="warn-avail-weight"></span> kg).
+            Silakan kurangi berat target atau gunakan paket sumber lain.
+          </span>
+        </div>
+
+        <!-- Lock Indicator -->
+        <div id="lock-indicator" style="display:none;" class="mt-3 p-3 border border-orange-300 rounded-lg bg-orange-50 flex items-center gap-2">
+          <span uk-icon="icon: lock; ratio: 0.9" style="color:#f59e0b;"></span>
+          <span class="text-sm font-semibold" style="color:#b45309;">Paket sumber TERKUNCI selama operasi pemotongan</span>
+          <span class="text-xs text-muted-foreground ml-auto" id="lock-barcode-display"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cut Result -->
+    <div class="uk-card uk-card-default mb-4" id="cut-result-card" style="display:none;">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">
+          <span uk-icon="icon: check-circle; ratio: 0.85" class="mr-1" style="color:#22c55e;"></span>
+          Hasil Pemotongan
+        </h3>
+        <span class="uk-badge uk-badge-primary">Selesai</span>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="cut-results-grid">
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button class="uk-btn uk-btn-primary" onclick="printCutLabels()">
+            <span uk-icon="icon: print; ratio: 0.8"></span> Cetak Label Hasil
+          </button>
+          <button class="uk-btn uk-btn-ghost" onclick="resetCutting()">Potong Lagi</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Operation -->
+    <div class="uk-card uk-card-default mb-4" id="active-op-card">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">
+          <span uk-icon="icon: clock; ratio: 0.85" class="mr-1" style="color:#f59e0b;"></span>
+          Operasi Aktif — CUT-001
+        </h3>
+        <span class="uk-badge" style="background:#fef3c7;color:#b45309;">Sedang Dipotong</span>
+      </div>
+      <div class="uk-card-body">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3">
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Barcode Sumber</div>
+            <div class="text-sm font-bold font-mono">CS-2026-05102</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Jenis Potong</div>
+            <div class="text-sm font-bold">Potong Premium</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Target / Actual</div>
+            <div class="text-sm font-bold">3.0 kg / 2.8 kg</div>
+          </div>
+          <div class="erp-card-compact border border-gray-200 rounded-lg">
+            <div class="text-xs text-muted-foreground mb-1">Operator</div>
+            <div class="text-sm font-bold">Budi Santoso</div>
+          </div>
+        </div>
+
+        <div class="erp-alert-warning mb-3">
+          <span uk-icon="icon: info; ratio: 0.85"></span>
+          <span class="ml-1 text-sm">
+            Operasi CUT-001 sedang berlangsung. Paket sumber <strong>CS-2026-05102</strong> terkunci.
+            Sisa berat: <strong>2.2 kg</strong> dari 5.0 kg asal.
+          </span>
+        </div>
+
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-xs text-muted-foreground">Progress Pemotongan</span>
+          <span class="text-xs font-semibold">56%</span>
+        </div>
+        <uk-progress value="28" max="50"></uk-progress>
+      </div>
+    </div>
+
+    <!-- Today's Cut History -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Riwayat Pemotongan — Hari Ini</h3>
+        <span class="text-xs text-muted-foreground">10 Mei 2026</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-small erp-table erp-table-compact">
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>ID Cut</th>
+                <th>Barcode Sumber</th>
+                <th>Jenis Potong</th>
+                <th>Berat (kg)</th>
+                <th>Barcode Hasil</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#eff6ff;">
+                <td data-label="Waktu" class="text-xs">14:32</td>
+                <td data-label="Waktu" class="font-mono text-xs">CUT-001</td>
+                <td data-label="Waktu" class="font-mono text-xs">CS-2026-05102</td>
+                <td data-label="Waktu">Premium</td>
+                <td data-label="Waktu" class="font-bold">2.8 / 3.0</td>
+                <td data-label="Waktu" class="font-mono text-xs">CUT-R-05102-A</td>
+                <td data-label="Waktu"><span class="uk-badge" style="background:#fef3c7;color:#b45309;">Aktif</span></td>
+              </tr>
+              <tr><td data-label="Waktu">13:45</td><td data-label="ID Cut">CUT-002</td><td data-label="Barcode Sumber">CS-2026-05089</td><td data-label="Jenis Potong">Biasa</td><td data-label="Berat (kg)">5.0</td><td data-label="Barcode Hasil">CUT-R-05089-A</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Selesai</span></td></tr>
+              <tr><td data-label="Waktu">12:18</td><td data-label="ID Cut">CUT-003</td><td data-label="Barcode Sumber">CS-2026-05071</td><td data-label="Jenis Potong">Grinding</td><td data-label="Berat (kg)">4.5</td><td data-label="Barcode Hasil">CUT-R-05071-A</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Selesai</span></td></tr>
+              <tr><td data-label="Waktu">11:02</td><td data-label="ID Cut">CUT-004</td><td data-label="Barcode Sumber">CS-2026-05056</td><td data-label="Jenis Potong">Premium</td><td data-label="Berat (kg)">2.0</td><td data-label="Barcode Hasil">CUT-R-05056-A</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Selesai</span></td></tr>
+              <tr><td data-label="Waktu">10:30</td><td data-label="ID Cut">CUT-005</td><td data-label="Barcode Sumber">CS-2026-05043</td><td data-label="Jenis Potong">Biasa</td><td data-label="Berat (kg)">3.5</td><td data-label="Barcode Hasil">CUT-R-05043-A</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Selesai</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Cutting Service'); });
+
+const pkgData = {
+  'CS-2026-05110': { sku: 'Daging Sapi Tenderloin', lot: 'LOT-DS-2026-088', exp: '25/05/2026', weight: 5.0 },
+  'CS-2026-05115': { sku: 'Daging Ayam Paha', lot: 'LOT-DA-2026-072', exp: '18/05/2026', weight: 4.2 },
+  'CS-2026-05120': { sku: 'Daging Babi Samcan', lot: 'LOT-DB-2026-065', exp: '22/05/2026', weight: 6.5 },
+  'CS-2026-05125': { sku: 'Daging Sapi Sirloin', lot: 'LOT-DS-2026-091', exp: '28/05/2026', weight: 3.8 },
+  'CS-2026-05130': { sku: 'Ikan Tuna Loin', lot: 'LOT-IT-2026-044', exp: '16/05/2026', weight: 7.0 }
+};
+
+let currentSource = null;
+let totalWeightUsed = {};
+
+function loadSourcePkg() {
+  const barcode = document.getElementById('scan-source').value.trim();
+  const infoEl = document.getElementById('source-info');
+  const cutBtn = document.getElementById('btn-cut');
+
+  if (!pkgData[barcode]) {
+    infoEl.style.display = 'none';
+    cutBtn.disabled = true;
+    currentSource = null;
+    return;
+  }
+
+  const pkg = pkgData[barcode];
+  const used = totalWeightUsed[barcode] || 0;
+  const available = pkg.weight - used;
+
+  document.getElementById('src-barcode').textContent = barcode;
+  document.getElementById('src-sku').textContent = pkg.sku;
+  document.getElementById('src-lot').textContent = pkg.lot;
+  document.getElementById('src-exp').textContent = pkg.exp;
+  document.getElementById('src-weight').textContent = available.toFixed(1) + ' kg';
+
+  currentSource = { ...pkg, barcode, available };
+
+  infoEl.style.display = 'block';
+  cutBtn.disabled = false;
+
+  document.getElementById('lock-indicator').style.display = 'none';
+  document.getElementById('weight-warning').style.display = 'none';
+  validateWeight();
+}
+
+function updateCutType() {
+  validateWeight();
+}
+
+function validateWeight() {
+  if (!currentSource) return;
+  const reqWeight = parseFloat(document.getElementById('target-weight').value) || 0;
+  const warnEl = document.getElementById('weight-warning');
+
+  if (reqWeight > currentSource.available) {
+    document.getElementById('warn-req-weight').textContent = reqWeight.toFixed(1);
+    document.getElementById('warn-avail-weight').textContent = currentSource.available.toFixed(1);
+    warnEl.style.display = 'flex';
+    document.getElementById('btn-cut').disabled = true;
+  } else {
+    warnEl.style.display = 'none';
+    document.getElementById('btn-cut').disabled = (reqWeight <= 0 || !document.getElementById('cut-type').value);
+  }
+}
+
+function startCutting() {
+  if (!currentSource) return;
+  const cutType = document.getElementById('cut-type').value;
+  const targetWeight = parseFloat(document.getElementById('target-weight').value);
+
+  if (!cutType || targetWeight <= 0) return;
+  if (targetWeight > currentSource.available) return;
+
+  // Show lock indicator
+  document.getElementById('lock-indicator').style.display = 'flex';
+  document.getElementById('lock-barcode-display').textContent = currentSource.barcode;
+
+  // Track weight usage
+  totalWeightUsed[currentSource.barcode] = (totalWeightUsed[currentSource.barcode] || 0) + targetWeight;
+
+  // Generate result
+  const cutLabels = { premium: 'P', biasa: 'B', grinding: 'G' };
+  const cutName = { premium: 'Potong Premium', biasa: 'Potong Biasa', grinding: 'Grinding' };
+  const resultBarcode = 'CUT-R-' + currentSource.barcode.replace('CS-', '') + '-' + cutLabels[cutType];
+
+  const actualWeight = (targetWeight + (Math.random() * 0.2 - 0.1)).toFixed(1);
+
+  const resultGrid = document.getElementById('cut-results-grid');
+  resultGrid.innerHTML = `
+    <div class="erp-barcode-label border border-gray-300 rounded-lg p-3" style="background:#fafafa;">
+      <div class="text-xs text-muted-foreground mb-1">Barcode Hasil</div>
+      <div class="barcode-lines mb-2" style="display:flex;justify-content:center;gap:1px;height:40px;align-items:flex-end;">
+        ${generateBarcodeLines()}
+      </div>
+      <div class="font-mono text-sm font-bold">${resultBarcode}</div>
+      <div class="text-xs text-muted-foreground mt-1">${currentSource.sku}</div>
+      <div class="text-xs mt-1">Berat: <strong>${actualWeight} kg</strong></div>
+    </div>
+    <div class="erp-card-compact border border-gray-200 rounded-lg">
+      <div class="text-xs text-muted-foreground mb-1">Detail Potong</div>
+      <div class="text-sm font-bold">${cutName[cutType]}</div>
+      <div class="text-xs text-muted-foreground mt-1">Target: ${targetWeight} kg</div>
+      <div class="text-xs text-muted-foreground">Actual: ${actualWeight} kg</div>
+      <div class="text-xs text-muted-foreground">Sisa Sumber: ${(currentSource.available - targetWeight).toFixed(1)} kg</div>
+    </div>
+    <div class="erp-card-compact border border-gray-200 rounded-lg">
+      <div class="text-xs text-muted-foreground mb-1">Info Paket Sumber</div>
+      <div class="font-mono text-sm">${currentSource.barcode}</div>
+      <div class="text-xs text-muted-foreground mt-1">Lot: ${currentSource.lot}</div>
+      <div class="text-xs text-muted-foreground">Exp: ${currentSource.exp}</div>
+    </div>
+  `;
+
+  document.getElementById('cut-result-card').style.display = 'block';
+
+  // Release lock after a moment
+  setTimeout(() => {
+    document.getElementById('lock-indicator').style.display = 'none';
+  }, 3000);
+}
+
+function generateBarcodeLines() {
+  let lines = '';
+  for (let i = 0; i < 30; i++) {
+    const w = Math.random() > 0.5 ? 2 : 1;
+    const h = 20 + Math.random() * 20;
+    lines += `<div style="width:${w}px;height:${h}px;background:#000;"></div>`;
+  }
+  return lines;
+}
+
+function printCutLabels() {
+  alert('Mencetak label hasil pemotongan... (simulasi)');
+}
+
+function resetCutting() {
+  document.getElementById('cut-result-card').style.display = 'none';
+  document.getElementById('scan-source').value = '';
+  document.getElementById('cut-type').value = '';
+  document.getElementById('target-weight').value = '';
+  document.getElementById('source-info').style.display = 'none';
+  document.getElementById('lock-indicator').style.display = 'none';
+  document.getElementById('weight-warning').style.display = 'none';
+  document.getElementById('btn-cut').disabled = true;
+  currentSource = null;
+  document.getElementById('scan-source').focus();
+}
+</script>
+</body>
+</html>
