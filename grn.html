@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Penerimaan Barang — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>document.documentElement.classList.remove('dark');</script>
+</head>
+<body class="bg-background text-foreground">
+<div id="erp-sidebar-slot"></div>
+<div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+<div id="erp-topbar-slot"></div>
+<main class="erp-main">
+  <div class="pb-4">
+
+    <!-- Breadcrumb -->
+    <ul class="uk-breadcrumb mb-4">
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="grn.html">Gudang</a></li>
+      <li><span>Penerimaan Barang</span></li>
+    </ul>
+
+    <!-- Page Header -->
+    <div class="erp-page-header mb-4">
+      <div>
+        <h1 class="text-xl font-semibold">Penerimaan Barang</h1>
+        <p class="text-sm text-muted-foreground">Formulir Goods Receipt Note (GRN) untuk penerimaan barang masuk</p>
+      </div>
+    </div>
+
+    <!-- GRN Form Card -->
+    <div class="uk-card uk-card-default mb-4">
+      <div class="uk-card-header">
+        <h3 class="uk-card-title text-sm font-semibold">Buat GRN Baru</h3>
+      </div>
+      <div class="uk-card-body">
+        <div class="erp-form-grid">
+          <div>
+            <label class="uk-form-label">SKU / Produk</label>
+            <select class="uk-select" id="grn-sku">
+              <option value="">— Pilih SKU —</option>
+              <option value="SKU-001">SKU-001 — Daging Sapi Frozen 1kg</option>
+              <option value="SKU-002">SKU-002 — Ayam Utuh Frozen 1.2kg</option>
+              <option value="SKU-003">SKU-003 — Udang Vannamei 500g</option>
+              <option value="SKU-004">SKU-004 — Sayur Campur Frozen 1kg</option>
+              <option value="SKU-005">SKU-005 — Ikan Salmon Fillet 400g</option>
+              <option value="SKU-006">SKU-006 — Kentang Frozen Fries 1kg</option>
+              <option value="SKU-007">SKU-007 — Nugget Ayam 500g</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Jumlah Kemasan</label>
+            <input type="number" class="uk-input" placeholder="0" id="grn-qty" min="1"/>
+          </div>
+          <div>
+            <label class="uk-form-label">Tanggal Produksi</label>
+            <input type="date" class="uk-input" id="grn-prod-date"/>
+          </div>
+          <div>
+            <label class="uk-form-label">Tanggal Kedaluwarsa</label>
+            <input type="date" class="uk-input" id="grn-exp-date"/>
+          </div>
+          <div>
+            <label class="uk-form-label">Supplier</label>
+            <select class="uk-select" id="grn-supplier">
+              <option value="">— Pilih Supplier —</option>
+              <option value="SUP-001">PT. FrozenFood Indonesia</option>
+              <option value="SUP-002">CV. Sejati Lautan Segar</option>
+              <option value="SUP-003">PT. Agro Fresh Supply</option>
+              <option value="SUP-004">CV. Nordic Seafood Import</option>
+            </select>
+          </div>
+          <div>
+            <label class="uk-form-label">Referensi PO</label>
+            <input type="text" class="uk-input" placeholder="PO-2026-XXXX" id="grn-ref-po"/>
+          </div>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button class="uk-btn uk-btn-primary" id="btn-create-grn">
+            <span uk-icon="icon: file-edit; ratio: 0.8"></span> Buat GRN
+          </button>
+          <button class="uk-btn uk-btn-ghost">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alert: Success -->
+    <div class="erp-alert-success mb-4" id="grn-success-alert" style="display:none;">
+      <span uk-icon="icon: check-circle; ratio: 0.8"></span>
+      <span class="ml-2 text-sm">GRN berhasil dibuat! Nomor: <strong id="grn-new-num"></strong></span>
+    </div>
+
+    <!-- Recent GRNs Table -->
+    <div class="uk-card uk-card-default">
+      <div class="uk-card-header flex items-center justify-between">
+        <h3 class="uk-card-title text-sm font-semibold">Daftar GRN Terakhir</h3>
+        <span class="uk-badge uk-badge-primary">8 GRN</span>
+      </div>
+      <div class="uk-card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="uk-table uk-table-divider uk-table-striped uk-table-small text-sm">
+            <thead>
+              <tr>
+                <th>No GRN</th>
+                <th>Tanggal</th>
+                <th>SKU</th>
+                <th>Jumlah</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td data-label="No GRN">GRN-2026-0008</td><td data-label="Tanggal">10/05/2026</td><td data-label="SKU">SKU-001 — Daging Sapi</td><td data-label="Jumlah">120 ktn</td><td data-label="Status"><span class="uk-badge">Draft</span></td><td data-label="Aksi">
+                  <div class="flex gap-1">
+                    <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                    <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="finalizeGRN('GRN-2026-0008')">Finalisasi</button>
+                  </div>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0007</td><td data-label="Tanggal">10/05/2026</td><td data-label="SKU">SKU-003 — Udang Vannamei</td><td data-label="Jumlah">80 ktn</td><td data-label="Status"><span class="uk-badge">Draft</span></td><td data-label="Aksi">
+                  <div class="flex gap-1">
+                    <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                    <button class="uk-btn uk-btn-primary uk-btn-sm text-xs" onclick="finalizeGRN('GRN-2026-0007')">Finalisasi</button>
+                  </div>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0006</td><td data-label="Tanggal">09/05/2026</td><td data-label="SKU">SKU-002 — Ayam Utuh</td><td data-label="Jumlah">200 ktn</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Final</span></td><td data-label="Aksi">
+                  <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0005</td><td data-label="Tanggal">09/05/2026</td><td data-label="SKU">SKU-005 — Salmon Fillet</td><td data-label="Jumlah">60 ktn</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Final</span></td><td data-label="Aksi">
+                  <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0004</td><td data-label="Tanggal">08/05/2026</td><td data-label="SKU">SKU-004 — Sayur Campur</td><td data-label="Jumlah">150 ktn</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Final</span></td><td data-label="Aksi">
+                  <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0003</td><td data-label="Tanggal">08/05/2026</td><td data-label="SKU">SKU-006 — Kentang Fries</td><td data-label="Jumlah">100 ktn</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Final</span></td><td data-label="Aksi">
+                  <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0002</td><td data-label="Tanggal">07/05/2026</td><td data-label="SKU">SKU-007 — Nugget Ayam</td><td data-label="Jumlah">90 ktn</td><td data-label="Status"><span class="uk-badge uk-badge-destructive">Batal</span></td><td data-label="Aksi">
+                  <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" disabled>Lihat</button>
+                </td></tr>
+              <tr><td data-label="No GRN">GRN-2026-0001</td><td data-label="Tanggal">06/05/2026</td><td data-label="SKU">SKU-001 — Daging Sapi</td><td data-label="Jumlah">180 ktn</td><td data-label="Status"><span class="uk-badge uk-badge-primary">Final</span></td><td data-label="Aksi">
+                  <button class="uk-btn uk-btn-ghost uk-btn-sm text-xs" onclick="showBarcodeModal()">Preview Barcode</button>
+                </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Barcode Preview Modal -->
+<div id="barcode-preview-modal" uk-modal>
+  <div class="uk-modal-dialog uk-modal-container">
+    <div class="uk-modal-header flex items-center justify-between">
+      <h3 class="text-sm font-semibold">Preview Barcode — GRN-2026-0008</h3>
+      <button class="uk-modal-close-default" type="button" uk-close></button>
+    </div>
+    <div class="uk-modal-body">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <!-- Barcode Label 1 -->
+        <div class="erp-barcode-label p-3 border border-gray-200 rounded-lg text-center bg-white">
+          <div class="text-xs font-semibold mb-1">PT. FrozenFood Indonesia</div>
+          <div class="barcode-lines mx-auto my-2" style="height:40px;width:120px;background:repeating-linear-gradient(90deg,#000 0px,#000 2px,transparent 2px,transparent 4px,#000 4px,#000 5px,transparent 5px,transparent 8px);border-radius:2px;"></div>
+          <div class="font-mono text-xs font-bold mb-1">CS-2026-00001</div>
+          <div class="text-xs text-muted-foreground">SKU-001 — Daging Sapi Frozen</div>
+          <div class="text-xs text-muted-foreground">Lot: LOT-001 | Exp: 10/11/2026</div>
+        </div>
+        <!-- Barcode Label 2 -->
+        <div class="erp-barcode-label p-3 border border-gray-200 rounded-lg text-center bg-white">
+          <div class="text-xs font-semibold mb-1">PT. FrozenFood Indonesia</div>
+          <div class="barcode-lines mx-auto my-2" style="height:40px;width:120px;background:repeating-linear-gradient(90deg,#000 0px,#000 1px,transparent 1px,transparent 3px,#000 3px,#000 5px,transparent 5px,transparent 7px);border-radius:2px;"></div>
+          <div class="font-mono text-xs font-bold mb-1">CS-2026-00002</div>
+          <div class="text-xs text-muted-foreground">SKU-001 — Daging Sapi Frozen</div>
+          <div class="text-xs text-muted-foreground">Lot: LOT-001 | Exp: 10/11/2026</div>
+        </div>
+        <!-- Barcode Label 3 -->
+        <div class="erp-barcode-label p-3 border border-gray-200 rounded-lg text-center bg-white">
+          <div class="text-xs font-semibold mb-1">PT. FrozenFood Indonesia</div>
+          <div class="barcode-lines mx-auto my-2" style="height:40px;width:120px;background:repeating-linear-gradient(90deg,#000 0px,#000 3px,transparent 3px,transparent 5px,#000 5px,#000 6px,transparent 6px,transparent 9px);border-radius:2px;"></div>
+          <div class="font-mono text-xs font-bold mb-1">CS-2026-00003</div>
+          <div class="text-xs text-muted-foreground">SKU-001 — Daging Sapi Frozen</div>
+          <div class="text-xs text-muted-foreground">Lot: LOT-002 | Exp: 10/11/2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="uk-modal-footer flex gap-2">
+      <button class="uk-btn uk-btn-primary text-xs">Cetak Semua Barcode</button>
+      <button class="uk-btn uk-btn-ghost uk-modal-close text-xs">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+<script src="assets/erp.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { initERPlayout('Penerimaan Barang'); });
+
+function showBarcodeModal() {
+  UIkit.modal('#barcode-preview-modal').show();
+}
+
+function finalizeGRN(grnNo) {
+  if (confirm('Finalisasi GRN ' + grnNo + '? Tindakan ini tidak dapat dibatalkan.')) {
+    alert('GRN ' + grnNo + ' berhasil difinalisasi!');
+  }
+}
+
+document.getElementById('btn-create-grn').addEventListener('click', function() {
+  const sku = document.getElementById('grn-sku').value;
+  const qty = document.getElementById('grn-qty').value;
+  if (!sku || !qty) {
+    alert('Harap lengkapi SKU dan Jumlah Kemasan!');
+    return;
+  }
+  const newNum = 'GRN-2026-0009';
+  document.getElementById('grn-new-num').textContent = newNum;
+  document.getElementById('grn-success-alert').style.display = 'flex';
+  setTimeout(() => { document.getElementById('grn-success-alert').style.display = 'none'; }, 5000);
+});
+</script>
+</body>
+</html>
