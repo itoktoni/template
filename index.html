@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id" class="uk-theme-zinc uk-radii-md uk-shadows-sm uk-font-sm">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Dashboard — Cold Storage WMS</title>
+  <link rel="preconnect" href="https://rsms.me/"/>
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/core.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/css/utilities.min.css"/>
+  <link rel="stylesheet" href="assets/erp.css"/>
+  <script>
+    document.documentElement.classList.remove('dark');
+  </script>
+</head>
+<body class="bg-background text-foreground">
+
+  <div id="erp-sidebar-slot"></div>
+  <div class="erp-overlay" id="erp-overlay" onclick="closeSidebar()"></div>
+  <div id="erp-topbar-slot"></div>
+
+  <main class="erp-main">
+    <div class="pb-4">
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="uk-card erp-stat">
+          <div class="erp-stat-label">Stok Real</div>
+          <div class="erp-stat-value">12,458</div>
+          <div class="text-xs text-muted-foreground mt-0.5">Total kemasan di gudang</div>
+        </div>
+        <div class="uk-card erp-stat">
+          <div class="erp-stat-label">Stok Sales</div>
+          <div class="erp-stat-value" style="color:var(--primary);">2,340</div>
+          <div class="text-xs text-muted-foreground mt-0.5">Reservasi aktif</div>
+        </div>
+        <div class="uk-card erp-stat">
+          <div class="erp-stat-label">Stok Tersedia</div>
+          <div class="erp-stat-value" style="color:#16a34a;">10,118</div>
+          <div class="text-xs text-muted-foreground mt-0.5">Siap dijual</div>
+        </div>
+        <div class="uk-card erp-stat">
+          <div class="erp-stat-label">Pallet Aktif</div>
+          <div class="erp-stat-value">86</div>
+          <div class="text-xs text-muted-foreground mt-0.5">Dari 120 kapasitas</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+        <!-- Forklift Tasks -->
+        <div class="uk-card">
+          <div class="uk-card-header" style="padding:.5rem .75rem;">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold">Forklift Tasks</span>
+              <span class="uk-badge">6 aktif</span>
+            </div>
+          </div>
+          <div class="uk-card-body" style="padding:.5rem .75rem;">
+            <div class="erp-section-gap">
+              <div class="flex items-center justify-between p-2 rounded" style="background:var(--muted);">
+                <div>
+                  <div class="text-xs font-semibold">FT-2024-001</div>
+                  <div class="text-xs" style="color:var(--muted-foreground);">Putaway → Rack A2-L3</div>
+                </div>
+                <span class="uk-badge uk-badge-primary" style="font-size:.6rem;">In Progress</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded" style="background:var(--muted);">
+                <div>
+                  <div class="text-xs font-semibold">FT-2024-002</div>
+                  <div class="text-xs" style="color:var(--muted-foreground);">Picking ← Rack C1-L1</div>
+                </div>
+                <span class="uk-badge uk-badge-primary" style="font-size:.6rem;">In Progress</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded" style="background:var(--muted);">
+                <div>
+                  <div class="text-xs font-semibold">FT-2024-003</div>
+                  <div class="text-xs" style="color:var(--muted-foreground);">Putaway → Rack B3-L2</div>
+                </div>
+                <span class="uk-badge" style="font-size:.6rem;background:#fef3c7;color:#92400e;">Pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expiring Soon -->
+        <div class="uk-card">
+          <div class="uk-card-header" style="padding:.5rem .75rem;">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold">Mendekati Kedaluwarsa</span>
+              <span class="uk-badge uk-badge-destructive" style="font-size:.6rem;">12 item</span>
+            </div>
+          </div>
+          <div class="uk-card-body" style="padding:.5rem .75rem;">
+            <div class="erp-section-gap">
+              <div class="flex items-center justify-between p-2 rounded" style="background:#fef3c7;">
+                <div>
+                  <div class="text-xs font-semibold">Daging Sapi 1kg</div>
+                  <div class="text-xs" style="color:#92400e;">Exp: 12 Mei 2026 · Rack A1-L2</div>
+                </div>
+                <span class="text-xs font-bold" style="color:#991b1b;">2 hari</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded" style="background:#fef3c7;">
+                <div>
+                  <div class="text-xs font-semibold">Susu UHT 1L</div>
+                  <div class="text-xs" style="color:#92400e;">Exp: 13 Mei 2026 · Rack B2-L1</div>
+                </div>
+                <span class="text-xs font-bold" style="color:#991b1b;">3 hari</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded" style="background:#fee2e2;">
+                <div>
+                  <div class="text-xs font-semibold">Cumi Frozen 500g</div>
+                  <div class="text-xs" style="color:#991b1b;">Exp: 11 Mei 2026 · Rack D1-L4</div>
+                </div>
+                <span class="text-xs font-bold" style="color:#991b1b;">1 hari!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rack Overview -->
+        <div class="uk-card">
+          <div class="uk-card-header" style="padding:.5rem .75rem;">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold">Rack Overview</span>
+              <a href="rack.html" class="text-xs" style="color:var(--primary);">Lihat Semua</a>
+            </div>
+          </div>
+          <div class="uk-card-body" style="padding:.5rem .75rem;">
+            <div class="grid grid-cols-4 gap-1.5">
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#d1fae5;color:#065f46;">Rack A<br><span class="text-xs font-normal">72%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#fef3c7;color:#92400e;">Rack B<br><span class="text-xs font-normal">91%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#d1fae5;color:#065f46;">Rack C<br><span class="text-xs font-normal">58%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#d1fae5;color:#065f46;">Rack D<br><span class="text-xs font-normal">45%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#d1fae5;color:#065f46;">Rack E<br><span class="text-xs font-normal">33%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#fee2e2;color:#991b1b;">Rack F<br><span class="text-xs font-normal">95%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#d1fae5;color:#065f46;">Rack G<br><span class="text-xs font-normal">20%</span></div>
+              <div class="text-center p-1 rounded text-xs font-semibold" style="background:#d1fae5;color:#065f46;">Rack H<br><span class="text-xs font-normal">60%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity Table -->
+      <div class="uk-card">
+        <div class="uk-card-header" style="padding:.5rem .75rem;">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold">Aktivitas Terbaru</span>
+            <span class="text-xs" style="color:var(--muted-foreground);">Hari ini</span>
+          </div>
+        </div>
+        <div class="uk-card-body" style="padding:0;">
+          <div class="erp-table-wrap">
+            <table class="uk-table uk-table-divider uk-table-compact erp-table erp-table-compact" style="margin:0;">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Transaksi</th>
+                  <th>Detail</th>
+                  <th>Operator</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td data-label="Waktu">08:32</td><td data-label="Transaksi"><span class="uk-badge" style="font-size:.6rem;background:#d1fae5;color:#065f46;">GRN</span></td><td data-label="Detail">GRN-0089 · 24 kemasan Daging Sapi</td><td data-label="Operator">Budi</td><td data-label="Status"><span class="uk-badge" style="font-size:.6rem;background:#d1fae5;color:#065f46;">Selesai</span></td></tr>
+                <tr><td data-label="Waktu">09:15</td><td data-label="Transaksi"><span class="uk-badge uk-badge-primary" style="font-size:.6rem;">Putaway</span></td><td data-label="Detail">FT-2024-001 · Pallet PL-0042 → Rack A2-L3</td><td data-label="Operator">Andi</td><td data-label="Status"><span class="uk-badge uk-badge-primary" style="font-size:.6rem;">In Progress</span></td></tr>
+                <tr><td data-label="Waktu">10:03</td><td data-label="Transaksi"><span class="uk-badge" style="font-size:.6rem;background:#e0e7ff;color:#3730a3;">SO</span></td><td data-label="Detail">SO-0034 · 5 karton Kentang untuk PT Jaya</td><td data-label="Operator">Sari</td><td data-label="Status"><span class="uk-badge" style="font-size:.6rem;background:#d1fae5;color:#065f46;">Confirmed</span></td></tr>
+                <tr><td data-label="Waktu">10:45</td><td data-label="Transaksi"><span class="uk-badge" style="font-size:.6rem;background:#fef3c7;color:#92400e;">Split</span></td><td data-label="Detail">Split Karton K-0023 → 4 bungkus eceran</td><td data-label="Operator">Dedi</td><td data-label="Status"><span class="uk-badge" style="font-size:.6rem;background:#d1fae5;color:#065f46;">Selesai</span></td></tr>
+                <tr><td data-label="Waktu">11:20</td><td data-label="Transaksi"><span class="uk-badge uk-badge-destructive" style="font-size:.6rem;">Picking</span></td><td data-label="Detail">FT-2024-002 · Rack C1-L1 → Staging B</td><td data-label="Operator">Andi</td><td data-label="Status"><span class="uk-badge uk-badge-primary" style="font-size:.6rem;">In Progress</span></td></tr>
+                <tr><td data-label="Waktu">13:00</td><td data-label="Transaksi"><span class="uk-badge" style="font-size:.6rem;background:#e0e7ff;color:#3730a3;">Opname</span></td><td data-label="Detail">Opname Harian · 12 rack random</td><td data-label="Operator">Supervisor</td><td data-label="Status"><span class="uk-badge" style="font-size:.6rem;background:#fef3c7;color:#92400e;">Scheduled</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/core.iife.js" ></script>
+  <script src="https://cdn.jsdelivr.net/npm/franken-ui@latest/dist/js/icon.iife.js"></script>
+  <script src="assets/erp.js"></script>
+  <script src="assets/layout.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initERPlayout('Dashboard');
+    });
+  </script>
+</body>
+</html>
